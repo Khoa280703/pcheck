@@ -1,0 +1,45 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo lock (optional - uncomment if not committing)
+# Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Debug builds
+/debug/
+/incremental/
+
+# Release builds (uncomment if you want to exclude release binaries)
+# /target/release/
+
+# Profile files (cargo profile)
+cargo-profile_*
+
+# Generated files
+*.orig
+*.rej
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup

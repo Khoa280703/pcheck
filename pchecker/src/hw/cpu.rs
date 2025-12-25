@@ -5,7 +5,6 @@ use sysinfo::{System, CpuRefreshKind, RefreshKind};
 pub struct CpuInfo {
     pub model: String,
     pub cores: usize,
-    pub vendor: String,
 }
 
 impl CpuInfo {
@@ -23,13 +22,6 @@ impl CpuInfo {
                 .map(|c| c.brand().to_string())
                 .unwrap_or_else(|| "Unknown".to_string()),
             cores: cpus.len(),
-            vendor: first_cpu
-                .map(|c| c.vendor_id().to_string())
-                .unwrap_or_else(|| "Unknown".to_string()),
         }
-    }
-
-    pub fn display(&self) -> String {
-        format!("{} ({} cores)", self.model, self.cores)
     }
 }

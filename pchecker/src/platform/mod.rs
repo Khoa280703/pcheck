@@ -4,26 +4,14 @@
 use std::fmt;
 
 /// Platform trait for OS-specific operations
-pub trait Platform: fmt::Display {
-    fn name(&self) -> &str;
-    fn kernel_version(&self) -> Option<String>;
-}
+pub trait Platform: fmt::Display {}
 
 /// macOS platform implementation
 #[cfg(target_os = "macos")]
 pub struct MacOS;
 
 #[cfg(target_os = "macos")]
-impl Platform for MacOS {
-    fn name(&self) -> &str {
-        "macOS"
-    }
-
-    fn kernel_version(&self) -> Option<String> {
-        // TODO: Implement via sysctl or system_profiler
-        Some("Darwin".to_string())
-    }
-}
+impl Platform for MacOS {}
 
 #[cfg(target_os = "macos")]
 impl fmt::Display for MacOS {
@@ -37,16 +25,7 @@ impl fmt::Display for MacOS {
 pub struct Windows;
 
 #[cfg(target_os = "windows")]
-impl Platform for Windows {
-    fn name(&self) -> &str {
-        "Windows"
-    }
-
-    fn kernel_version(&self) -> Option<String> {
-        // TODO: Implement via WMI
-        Some("Windows NT".to_string())
-    }
-}
+impl Platform for Windows {}
 
 #[cfg(target_os = "windows")]
 impl fmt::Display for Windows {
@@ -60,16 +39,7 @@ impl fmt::Display for Windows {
 pub struct Linux;
 
 #[cfg(target_os = "linux")]
-impl Platform for Linux {
-    fn name(&self) -> &str {
-        "Linux"
-    }
-
-    fn kernel_version(&self) -> Option<String> {
-        // TODO: Implement via /proc/version
-        Some("Linux".to_string())
-    }
-}
+impl Platform for Linux {}
 
 #[cfg(target_os = "linux")]
 impl fmt::Display for Linux {

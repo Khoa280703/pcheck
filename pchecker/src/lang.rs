@@ -6,23 +6,6 @@ pub enum Language {
     English,
 }
 
-impl Language {
-    pub fn from_code(code: &str) -> Option<Self> {
-        match code.to_lowercase().as_str() {
-            "vi" | "vietnamese" => Some(Language::Vietnamese),
-            "en" | "english" => Some(Language::English),
-            _ => None,
-        }
-    }
-
-    pub fn code(&self) -> &str {
-        match self {
-            Language::Vietnamese => "vi",
-            Language::English => "en",
-        }
-    }
-}
-
 // Text translations
 pub struct Text {
     pub lang: Language,
@@ -48,24 +31,15 @@ impl Text {
     }
 
     pub fn cpu(&self) -> &str {
-        match self.lang {
-            Language::Vietnamese => "CPU",
-            Language::English => "CPU",
-        }
+        "CPU"
     }
 
     pub fn gpu(&self) -> &str {
-        match self.lang {
-            Language::Vietnamese => "GPU",
-            Language::English => "GPU",
-        }
+        "GPU"
     }
 
     pub fn ram(&self) -> &str {
-        match self.lang {
-            Language::Vietnamese => "RAM",
-            Language::English => "RAM",
-        }
+        "RAM"
     }
 
     pub fn disk(&self) -> &str {
@@ -110,24 +84,136 @@ impl Text {
         }
     }
 
-    pub fn select_prompt(&self) -> &str {
+    pub fn health_check(&self) -> &str {
         match self.lang {
-            Language::Vietnamese => "Chọn ngôn ngữ:\n\n  [1] Tiếng Việt\n  [2] English\n\nLựa chọn của bạn [1-2]: ",
-            Language::English => "Select language:\n\n  [1] Tiếng Việt\n  [2] English\n\nYour choice [1-2]: ",
+            Language::Vietnamese => "KIỂM TRA SỨC KHỎE PHẦN CỨNG",
+            Language::English => "HARDWARE HEALTH CHECK",
         }
     }
 
-    pub fn invalid_choice(&self) -> &str {
+    pub fn testing_cpu(&self) -> &str {
         match self.lang {
-            Language::Vietnamese => "Lựa chọn không hợp lệ. Vui lòng chọn 1 hoặc 2.",
-            Language::English => "Invalid choice. Please select 1 or 2.",
+            Language::Vietnamese => "Đang kiểm tra CPU",
+            Language::English => "Testing CPU",
         }
     }
 
-    pub fn platform_name(&self) -> &str {
+    pub fn testing_ram(&self) -> &str {
         match self.lang {
-            Language::Vietnamese => "macOS (Apple Silicon)",
-            Language::English => "macOS (Apple Silicon)",
+            Language::Vietnamese => "Đang kiểm tra RAM",
+            Language::English => "Testing RAM",
+        }
+    }
+
+    pub fn critical_issues(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "VẤN ĐỀ NGHIÊM TRỌNG:",
+            Language::English => "CRITICAL ISSUES:",
+        }
+    }
+
+    pub fn issues_detected(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "PHÁT HIỆN VẤN ĐỀ:",
+            Language::English => "ISSUES DETECTED:",
+        }
+    }
+
+    pub fn summary(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "TÓM TẮT:",
+            Language::English => "SUMMARY:",
+        }
+    }
+
+    pub fn hardware_good(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Phần cứng có vẻ ở trạng thái tốt",
+            Language::English => "Hardware appears to be in good condition",
+        }
+    }
+
+    pub fn hardware_some_issues(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Phần cứng có một số vấn đề",
+            Language::English => "Hardware has some issues",
+        }
+    }
+
+    pub fn hardware_not_recommended(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Không khuyến nghị sử dụng",
+            Language::English => "Not recommended for use",
+        }
+    }
+
+    pub fn cpu_health_check(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Kiểm tra CPU",
+            Language::English => "CPU Health Check",
+        }
+    }
+
+    pub fn operations(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "phép tính",
+            Language::English => "operations",
+        }
+    }
+
+    pub fn ops_per_sec(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "phép/giây",
+            Language::English => "ops/sec",
+        }
+    }
+
+    pub fn avg_op_time(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "tb thời gian",
+            Language::English => "avg time",
+        }
+    }
+
+    pub fn variance(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "dao động",
+            Language::English => "variance",
+        }
+    }
+
+    pub fn ram_health_check(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Kiểm tra RAM",
+            Language::English => "RAM Health Check",
+        }
+    }
+
+    pub fn tested_gb(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "đã test",
+            Language::English => "tested",
+        }
+    }
+
+    pub fn write_speed(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "tốc độ ghi",
+            Language::English => "write speed",
+        }
+    }
+
+    pub fn read_speed(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "tốc độ đọc",
+            Language::English => "read speed",
+        }
+    }
+
+    pub fn errors_detected(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "lỗi phát hiện",
+            Language::English => "errors detected",
         }
     }
 }

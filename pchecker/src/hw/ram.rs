@@ -20,9 +20,4 @@ impl RamInfo {
             used_gb: used as f64 / 1024.0 / 1024.0 / 1024.0,
         }
     }
-
-    pub fn display(&self) -> String {
-        let available = self.total_gb - self.used_gb;
-        format!("{:.1} GB ({:.1} GB free)", self.total_gb, available)
-    }
 }

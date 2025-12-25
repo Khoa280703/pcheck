@@ -5,7 +5,6 @@ use sysinfo::Disks;
 pub struct DiskInfo {
     pub name: String,
     pub total_gb: f64,
-    pub kind: String,
 }
 
 impl DiskInfo {
@@ -19,7 +18,6 @@ impl DiskInfo {
                 Self {
                     name: disk.name().to_string_lossy().to_string(),
                     total_gb: total_bytes as f64 / 1024.0 / 1024.0 / 1024.0,
-                    kind: format!("{:?}", disk.kind()),
                 }
             })
             .collect()
