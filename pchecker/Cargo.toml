@@ -1,6 +1,6 @@
 [package]
 name = "pchecker"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Cross-platform hardware detection CLI tool"
 license = "MIT"
@@ -10,6 +10,7 @@ authors = ["Khoa280703"]
 [dependencies]
 sysinfo = "0.37"
 clap = { version = "4.5", features = ["derive"] }
+num_cpus = "1.16"
 
 [profile.release]
 opt-level = "z"
