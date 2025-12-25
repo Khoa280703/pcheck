@@ -20,6 +20,9 @@ impl Default for RamTestConfig {
 }
 
 pub struct RamTestResult {
+    // Hardware info
+    pub ram_total_gb: f64,
+    // Test metrics
     pub tested_gb: f64,
     pub write_speed_gb_s: f64,
     pub read_speed_gb_s: f64,
@@ -29,7 +32,7 @@ pub struct RamTestResult {
 
 /// Run RAM health check
 /// Allocates memory, writes patterns, reads back to verify
-pub fn run_stress_test(config: RamTestConfig) -> RamTestResult {
+pub fn run_stress_test(config: RamTestConfig, ram_total_gb: f64) -> RamTestResult {
     // Get available memory
     let mut sys = System::new_all();
     sys.refresh_memory();
@@ -116,6 +119,7 @@ pub fn run_stress_test(config: RamTestConfig) -> RamTestResult {
     let health = evaluate_ram_health(test_gb, write_speed, read_speed, errors);
 
     RamTestResult {
+        ram_total_gb,
         tested_gb: test_gb,
         write_speed_gb_s: write_speed,
         read_speed_gb_s: read_speed,
@@ -168,7 +172,7 @@ mod tests {
         let config = RamTestConfig {
             max_gb: Some(0.1), // Only test 100MB
         };
-        let result = run_stress_test(config);
+        let result = run_stress_test(config, 16.0);
 
         assert!(result.tested_gb > 0.0);
         assert!(matches!(result.health, HealthStatus::Healthy));

@@ -31,15 +31,31 @@ impl Text {
     }
 
     pub fn cpu(&self) -> &str {
-        "CPU"
+        match self.lang {
+            Language::Vietnamese => "cpu",
+            Language::English => "cpu",
+        }
     }
 
     pub fn gpu(&self) -> &str {
-        "GPU"
+        match self.lang {
+            Language::Vietnamese => "gpu",
+            Language::English => "gpu",
+        }
     }
 
     pub fn ram(&self) -> &str {
-        "RAM"
+        match self.lang {
+            Language::Vietnamese => "ram",
+            Language::English => "ram",
+        }
+    }
+
+    pub fn cores_label(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "nhân",
+            Language::English => "cores",
+        }
     }
 
     pub fn disk(&self) -> &str {
@@ -214,6 +230,112 @@ impl Text {
         match self.lang {
             Language::Vietnamese => "lỗi phát hiện",
             Language::English => "errors detected",
+        }
+    }
+
+    pub fn testing_disk(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đang kiểm tra ổ cứng",
+            Language::English => "Testing Disk",
+        }
+    }
+
+    pub fn disk_health_check(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Kiểm tra ổ cứng",
+            Language::English => "Disk Health Check",
+        }
+    }
+
+    pub fn seek_time(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "thời gian seek",
+            Language::English => "seek time",
+        }
+    }
+
+    pub fn bad_sectors(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "bad sector",
+            Language::English => "bad sectors",
+        }
+    }
+
+    // Disk field labels
+    pub fn device(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "thiết bị",
+            Language::English => "device",
+        }
+    }
+
+    pub fn usage(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "đã dùng",
+            Language::English => "usage",
+        }
+    }
+
+    pub fn available(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "còn trống",
+            Language::English => "available",
+        }
+    }
+
+    pub fn performance_test(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "KIỂM TRA HIỆU NĂNG",
+            Language::English => "PERFORMANCE TEST",
+        }
+    }
+
+    pub fn smart_health(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "SỨC KHỎE SMART",
+            Language::English => "SMART HEALTH",
+        }
+    }
+
+    pub fn smart_status(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "trạng thái SMART",
+            Language::English => "SMART status",
+        }
+    }
+
+    pub fn temperature(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "nhiệt độ",
+            Language::English => "temperature",
+        }
+    }
+
+    pub fn frequency(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "xung nhịp",
+            Language::English => "frequency",
+        }
+    }
+
+    pub fn power_on_hours(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "giờ hoạt động",
+            Language::English => "power on hours",
+        }
+    }
+
+    pub fn power_cycles(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "chu kỳ bật",
+            Language::English => "power cycles",
+        }
+    }
+
+    pub fn model(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "mẫu",
+            Language::English => "model",
         }
     }
 }

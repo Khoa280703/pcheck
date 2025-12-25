@@ -29,6 +29,10 @@ impl Default for CpuTestConfig {
 }
 
 pub struct CpuTestResult {
+    // Hardware info
+    pub cpu_model: String,
+    pub cpu_cores: usize,
+    // Test metrics
     pub operations: u64,
     pub ops_per_second: f64,
     pub avg_op_time_ms: f64,
@@ -42,8 +46,8 @@ pub struct CpuTestResult {
 
 /// Run CPU health check
 /// Spawns threads equal to logical CPU cores and runs intensive calculations
-pub fn run_stress_test(config: CpuTestConfig) -> CpuTestResult {
-    let thread_count = config.thread_count.unwrap_or_else(num_cpus::get);
+pub fn run_stress_test(config: CpuTestConfig, cpu_model: String, cpu_cores: usize) -> CpuTestResult {
+    let thread_count = config.thread_count.unwrap_or(cpu_cores);
     let running = Arc::new(AtomicBool::new(true));
 
     // Start background CPU usage monitor
@@ -175,6 +179,8 @@ pub fn run_stress_test(config: CpuTestConfig) -> CpuTestResult {
     );
 
     CpuTestResult {
+        cpu_model,
+        cpu_cores,
         operations: all_ops,
         ops_per_second,
         avg_op_time_ms: avg_time / 1000.0,
@@ -469,7 +475,7 @@ mod tests {
             thread_count: Some(2),
             verbose: false,
         };
-        let result = run_stress_test(config);
+        let result = run_stress_test(config, "Test CPU".to_string(), 2);
 
         assert!(result.operations > 0);
         assert!(matches!(result.health, HealthStatus::Healthy));
