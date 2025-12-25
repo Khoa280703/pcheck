@@ -34,6 +34,10 @@ struct Args {
     /// Quick health check (15 seconds)
     #[arg(long, conflicts_with = "duration")]
     quick: bool,
+
+    /// Verbose output (show detailed per-core metrics)
+    #[arg(short, long)]
+    verbose: bool,
 }
 
 fn main() {
@@ -51,7 +55,7 @@ fn main() {
     let text = Text::new(lang);
 
     if args.stress {
-        run_health_check_mode(duration, &text);
+        run_health_check_mode(duration, args.verbose, &text);
     } else {
         run_info_mode(&text);
     }
@@ -137,7 +141,7 @@ fn run_info_mode(text: &Text) {
 }
 
 /// Run health check mode (v0.2.0 feature)
-fn run_health_check_mode(duration: u64, text: &Text) {
+fn run_health_check_mode(duration: u64, verbose: bool, text: &Text) {
     let start_time = Instant::now();
 
     println!();
@@ -157,6 +161,7 @@ fn run_health_check_mode(duration: u64, text: &Text) {
     let cpu_config = CpuTestConfig {
         duration_secs: duration,
         thread_count: None,
+        verbose,
     };
     let cpu_result = stress::run_cpu_test(cpu_config);
 

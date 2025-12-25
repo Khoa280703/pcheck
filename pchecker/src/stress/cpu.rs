@@ -9,12 +9,13 @@ use std::io::{self, Write};
 use std::collections::HashMap;
 
 use super::HealthStatus;
-use crate::sensors::{CpuTemp, CpuFrequency, get_cpu_temp, get_cpu_frequency, CpuMonitorHandle};
-use crate::fmt::{RESET, CYAN, temp_color, temp_status, usage_color, format_large_number, progress_bar};
+use crate::sensors::{CpuTemp, CpuFrequency, get_cpu_temp, get_cpu_frequency, CpuMonitorHandle, get_all_sensors};
+use crate::fmt::{RESET, CYAN, temp_color, temp_status, usage_color, format_large_number, progress_bar, GREEN, DARK_GRAY};
 
 pub struct CpuTestConfig {
     pub duration_secs: u64,
     pub thread_count: Option<usize>,
+    pub verbose: bool,
 }
 
 impl Default for CpuTestConfig {
@@ -22,6 +23,7 @@ impl Default for CpuTestConfig {
         Self {
             duration_secs: 60,
             thread_count: None,
+            verbose: false,
         }
     }
 }
@@ -100,14 +102,26 @@ pub fn run_stress_test(config: CpuTestConfig) -> CpuTestResult {
             &freq,
             &cpu_usage,
             is_first,
+            config.verbose,
         );
     }
 
     // Stop test
     running.store(false, Ordering::Relaxed);
 
-    // Clear the progress lines before showing results (3 lines total)
-    for _ in 0..3 {
+    // Clear the progress lines before showing results
+    // Normal mode: 1 line, Verbose mode: varies based on core count
+    let lines_to_clear = if config.verbose {
+        // Main line + per-core rows + sensor section (max 4 sensors + 1 header + 1 blank)
+        let freq = get_cpu_frequency();
+        let cores_per_row = if cfg!(target_os = "macos") { 4 } else { 3 };
+        let core_rows = (freq.cores + cores_per_row - 1) / cores_per_row;
+        1 + core_rows + 6 // +6 for sensor section (blank + header + max 4 sensors)
+    } else {
+        1 // Normal mode: only 1 line
+    };
+
+    for _ in 0..lines_to_clear {
         print!("\r\x1b[2K");  // Clear line
         print!("\x1b[1A");     // Move up
     }
@@ -183,6 +197,7 @@ fn print_cpu_progress_box(
     freq: &CpuFrequency,
     cpu_usage: &HashMap<usize, f32>,
     is_first: bool,
+    verbose: bool,
 ) {
     let percent = ((elapsed * 100) / total) as u8;
     let bar = progress_bar(percent, 14);
@@ -202,25 +217,54 @@ fn print_cpu_progress_box(
 
     // Build per-core rows based on platform
     let cores = freq.cores;
+    let per_core_rows = build_per_core_display(freq, cpu_usage, cores, verbose);
 
-    // macOS: usage % only (frequency is fake/static)
-    // Windows/Linux: usage % + frequency
-    let per_core_rows = build_per_core_display(freq, cpu_usage, cores);
+    // Calculate lines to move back (depends on verbose mode)
+    let line_count = if verbose {
+        per_core_rows.len() + 1 // main line + core rows
+    } else {
+        1 // normal mode: only 1 line
+    };
 
     // Move cursor up to overwrite previous output (not on first iteration)
     if !is_first {
-        // Move up 2 lines (we print 3 lines total: main + 2 core rows)
-        print!("\x1b[2A");
+        for _ in 0..line_count {
+            print!("\x1b[1A"); // Move up one line
+        }
     }
 
-    // Main progress line
-    let temp_display = format!("{}{}{} ({}{})", temp_color_code, temp_str, RESET, temp_color_code, temp_status_text);
-    println!("⏳ CPU: [{}] {}% | {} ops | {} | {:.2} GHz",
-          bar, percent, ops_str, temp_display, freq.current_ghz);
+    if verbose {
+        // === VERBOSE MODE ===
+        // Main progress line
+        let temp_display = format!("{}{}{} ({}{})", temp_color_code, temp_str, RESET, temp_color_code, temp_status_text);
+        println!("⏳ CPU: [{}] {}% | {} ops | {} | {:.2} GHz",
+              bar, percent, ops_str, temp_display, freq.current_ghz);
 
-    // Per-core rows
-    for row in &per_core_rows {
-        println!("{}", row);
+        // Per-core rows with detailed format
+        for row in &per_core_rows {
+            println!("{}", row);
+        }
+
+        // Sensor list section (update every 5 seconds to avoid flicker)
+        if elapsed % 5 == 0 || elapsed == total {
+            let sensors = get_all_sensors();
+            if !sensors.is_empty() {
+                println!();
+                println!("🌡️  Sensors:");
+                for sensor in sensors.iter().take(8) { // Limit to 8 sensors
+                    let s_temp = sensor.temp;
+                    let s_color = temp_color(s_temp);
+                    println!("   • {}{}{}: {}{:.1}°C{}",
+                        CYAN, sensor.label, RESET, s_color, s_temp, RESET);
+                }
+            }
+        }
+    } else {
+        // === NORMAL MODE ===
+        // Only show main progress line, no per-core details
+        let temp_display = format!("{}{}{} ({}{})", temp_color_code, temp_str, RESET, temp_color_code, temp_status_text);
+        println!("⏳ CPU: [{}] {}% | {} ops | {} | {:.2} GHz",
+              bar, percent, ops_str, temp_display, freq.current_ghz);
     }
 
     io::stdout().flush().unwrap();
@@ -229,46 +273,99 @@ fn print_cpu_progress_box(
 /// Build per-core display rows
 /// Platform-specific: macOS shows usage %, Win/Linux shows usage %@frequency
 /// Uses real-time CPU usage from background monitor
+/// Verbose mode: Shows detailed bar chart with usage + frequency
+#[allow(unused_variables)]
 fn build_per_core_display(
-    _freq: &CpuFrequency,
+    freq: &CpuFrequency,
     cpu_usage: &HashMap<usize, f32>,
     cores: usize,
+    verbose: bool,
 ) -> Vec<String> {
     let mut rows = Vec::new();
 
-    #[cfg(target_os = "macos")]
-    {
-        // macOS: 6 cores per row, show usage % only
-        let cores_per_row = 6;
-        for chunk_start in (0..cores).step_by(cores_per_row) {
-            let chunk_end = (chunk_start + cores_per_row).min(cores);
-            let mut row = String::new();
-            for i in chunk_start..chunk_end {
-                // Get real-time usage from background monitor
-                let display_usage = cpu_usage.get(&i).copied().unwrap_or(0.0);
-                let color = usage_color(display_usage);
-                let usage_str = format!("{}%", display_usage as u32);
-                row.push_str(&format!("{}C{}:{}{}{} ", CYAN, i, color, usage_str, RESET));
-            }
-            rows.push(row.trim().to_string());
-        }
-    }
+    if verbose {
+        // === VERBOSE MODE: Detailed format with bars ===
+        // Format: C00: [████░░░░░░] 95% @4.2GHz
+        let cores_per_row = if cfg!(target_os = "macos") { 4 } else { 3 };
 
-    #[cfg(not(target_os = "macos"))]
-    {
-        // Windows/Linux: 4 cores per row, show usage %@frequency
-        let cores_per_row = 4;
         for chunk_start in (0..cores).step_by(cores_per_row) {
             let chunk_end = (chunk_start + cores_per_row).min(cores);
             let mut row = String::new();
+
             for i in chunk_start..chunk_end {
-                // Get real-time usage from background monitor
                 let display_usage = cpu_usage.get(&i).copied().unwrap_or(0.0);
-                let color = usage_color(display_usage);
-                let usage_str = format!("{}%", display_usage as u32);
-                row.push_str(&format!("{}C{}:{}{}{} ", CYAN, i, color, usage_str, RESET));
+                let usage_int = display_usage as u32;
+
+                // Create usage bar (10 chars wide)
+                let bar_filled = (usage_int * 10 / 100).min(10) as usize;
+
+                // Build bar string
+                let bar_str = format!(
+                    "{}{}{}{}",
+                    GREEN,
+                    "█".repeat(bar_filled),
+                    DARK_GRAY,
+                    "░".repeat(10 - bar_filled)
+                );
+
+                // Format: C00: [████░░░░░░] 95% @4.2GHz
+                #[cfg(target_os = "macos")]
+                let core_str = format!(
+                    "{}C{:02}:{} [{}] {}%",
+                    CYAN, i, RESET, bar_str, usage_int
+                );
+
+                #[cfg(not(target_os = "macos"))]
+                let core_str = {
+                    let core_mhz = freq.per_core_mhz.get(&i).copied().unwrap_or(0);
+                    let core_ghz = core_mhz as f64 / 1000.0;
+                    format!(
+                        "{}C{:02}:{} [{}] {}% @{:.1}GHz",
+                        CYAN, i, RESET, bar_str, usage_int, core_ghz
+                    )
+                };
+
+                row.push_str(&core_str);
+                if i < chunk_end - 1 {
+                    row.push(' '); // Space between cores
+                }
             }
-            rows.push(row.trim().to_string());
+            rows.push(row);
+        }
+    } else {
+        // === NORMAL MODE: Compact format ===
+        #[cfg(target_os = "macos")]
+        {
+            // macOS: 6 cores per row, show usage % only
+            let cores_per_row = 6;
+            for chunk_start in (0..cores).step_by(cores_per_row) {
+                let chunk_end = (chunk_start + cores_per_row).min(cores);
+                let mut row = String::new();
+                for i in chunk_start..chunk_end {
+                    let display_usage = cpu_usage.get(&i).copied().unwrap_or(0.0);
+                    let color = usage_color(display_usage);
+                    let usage_str = format!("{}%", display_usage as u32);
+                    row.push_str(&format!("{}C{}:{}{}{} ", CYAN, i, color, usage_str, RESET));
+                }
+                rows.push(row.trim().to_string());
+            }
+        }
+
+        #[cfg(not(target_os = "macos"))]
+        {
+            // Windows/Linux: 4 cores per row, show usage %@frequency
+            let cores_per_row = 4;
+            for chunk_start in (0..cores).step_by(cores_per_row) {
+                let chunk_end = (chunk_start + cores_per_row).min(cores);
+                let mut row = String::new();
+                for i in chunk_start..chunk_end {
+                    let display_usage = cpu_usage.get(&i).copied().unwrap_or(0.0);
+                    let color = usage_color(display_usage);
+                    let usage_str = format!("{}%", display_usage as u32);
+                    row.push_str(&format!("{}C{}:{}{}{} ", CYAN, i, color, usage_str, RESET));
+                }
+                rows.push(row.trim().to_string());
+            }
         }
     }
 
@@ -370,6 +467,7 @@ mod tests {
         let config = CpuTestConfig {
             duration_secs: 1,
             thread_count: Some(2),
+            verbose: false,
         };
         let result = run_stress_test(config);
 

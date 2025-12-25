@@ -3,6 +3,36 @@
 
 use sysinfo::Components;
 
+/// Sensor reading for verbose mode
+#[derive(Debug, Clone)]
+pub struct SensorReading {
+    pub label: String,
+    pub temp: f32,
+}
+
+/// Get all available temperature sensors (for verbose mode)
+pub fn get_all_sensors() -> Vec<SensorReading> {
+    let components = Components::new_with_refreshed_list();
+    let mut sensors = Vec::new();
+
+    for comp in components.iter() {
+        let label = comp.label().to_string();
+        let temp = comp.temperature();
+
+        // Filter out invalid readings
+        if let Some(t) = temp {
+            if t > -1000.0 && t < 150.0 {
+                sensors.push(SensorReading {
+                    label,
+                    temp: t,
+                });
+            }
+        }
+    }
+
+    sensors
+}
+
 /// CPU temperature reading
 #[derive(Debug, Clone)]
 pub struct CpuTemp {

@@ -2,6 +2,7 @@
 // Cross-platform support for Linux, macOS, Windows
 
 use sysinfo::{System, RefreshKind, CpuRefreshKind};
+use std::collections::HashMap;
 
 /// CPU frequency reading
 #[derive(Debug, Clone)]
@@ -9,6 +10,8 @@ pub struct CpuFrequency {
     pub current_mhz: u64,
     pub current_ghz: f64,
     pub cores: usize,
+    #[allow(dead_code)]
+    pub per_core_mhz: HashMap<usize, u64>,
 }
 
 /// Get current CPU frequency from sysinfo
@@ -26,7 +29,14 @@ pub fn get_cpu_frequency() -> CpuFrequency {
             current_mhz: 0,
             current_ghz: 0.0,
             cores: 0,
+            per_core_mhz: HashMap::new(),
         };
+    }
+
+    // Get per-core frequency
+    let mut per_core_mhz = HashMap::new();
+    for (i, cpu) in cpus.iter().enumerate() {
+        per_core_mhz.insert(i, cpu.frequency());
     }
 
     // Get current frequency (average of all cores)
@@ -38,6 +48,7 @@ pub fn get_cpu_frequency() -> CpuFrequency {
         current_mhz,
         current_ghz,
         cores,
+        per_core_mhz,
     }
 }
 
