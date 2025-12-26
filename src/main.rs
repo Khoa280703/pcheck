@@ -161,7 +161,7 @@ fn run_info_mode(text: &Text) {
     // Detect GPU
     let gpus = GpuInfo::new();
     if let Some(gpu) = gpus.first() {
-        print_section("🎮", text.gpu(), &gpu.display());
+        print_section("🎮", text.gpu(), &gpu.display_localized(text));
     } else {
         print_section("🎮", text.gpu(), text.no_gpu());
     }
@@ -422,6 +422,9 @@ fn print_cpu_result(result: &stress::CpuTestResult, text: &Text) -> (bool, Vec<S
     let time_str = format!("{:.3}ms", result.avg_op_time_ms);
     let var_str = format!("{:.1}%", result.variance_pct);
 
+    // Reset any colors from progress bars before printing result box
+    print!("\x1b[0m");
+
     // Temperature display
     let temp_str = if let Some(temp) = &result.temperature {
         format!("{:.1}°C", temp.current)
@@ -519,6 +522,9 @@ fn table_row(label: &str, value: &str) -> String {
 }
 
 fn print_ram_result(result: &stress::RamTestResult, text: &Text) -> (bool, Vec<String>) {
+    // Reset any colors from progress bars before printing result box
+    print!("\x1b[0m");
+
     let (status_icon, healthy, issues) = match &result.health {
         HealthStatus::Healthy => ("✅", true, vec![]),
         HealthStatus::IssuesDetected(issues) => ("⚠️", false, issues.clone()),
@@ -545,6 +551,9 @@ fn print_ram_result(result: &stress::RamTestResult, text: &Text) -> (bool, Vec<S
 }
 
 fn print_disk_result(result: &stress::DiskTestResult, text: &Text) -> (bool, Vec<String>) {
+    // Reset any colors from progress bars before printing result box
+    print!("\x1b[0m");
+
     let (status_icon, healthy, issues) = match &result.health {
         HealthStatus::Healthy => ("✅", true, vec![]),
         HealthStatus::IssuesDetected(issues) => ("⚠️", false, issues.clone()),
@@ -556,7 +565,7 @@ fn print_disk_result(result: &stress::DiskTestResult, text: &Text) -> (bool, Vec
     let header_len = header_text.chars().count();
     let header_padding = 52 - header_len - 4; // 4 for emoji + spaces
 
-    let disk_type = if result.is_ssd { "SSD" } else { "HDD" };
+    let disk_type = if result.is_ssd { text.ssd() } else { text.hdd() };
     let size_str = if result.disk_size_gb >= 1000.0 {
         format!("{:.1} TB", result.disk_size_gb / 1024.0)
     } else {
@@ -572,15 +581,15 @@ fn print_disk_result(result: &stress::DiskTestResult, text: &Text) -> (bool, Vec
     println!("│ 💿 {} {:>width$} │", header_text, status_icon, width = header_padding + 2);
     println!("├──────────────────────────────────────────────────────────┤");
     // Hardware info
-    println!("{}", table_row("disk", &result.disk_name));
+    println!("{}", table_row(text.disk_label(), &result.disk_name));
     if let Some(ref device) = result.disk_device {
         println!("{}", table_row(text.device(), device));
     }
-    println!("{}", table_row("size", &size_str));
+    println!("{}", table_row(text.size(), &size_str));
     println!("{}", table_row(text.usage(), &usage_str));
     println!("{}", table_row(text.available(), &avail_str));
-    println!("{}", table_row("fs", &result.disk_fs));
-    println!("{}", table_row("type", disk_type));
+    println!("{}", table_row(text.fs(), &result.disk_fs));
+    println!("{}", table_row(text.type_label(), disk_type));
 
     // Verbose mode: Add separator and SMART section
     if verbose {
@@ -605,13 +614,13 @@ fn print_disk_result(result: &stress::DiskTestResult, text: &Text) -> (bool, Vec
             // Health percentage with bar
             if let Some(pct) = smart.health_percentage {
                 let bar = create_health_bar(pct);
-                println!("{}", table_row("health", &format!("{} {}", bar, pct)));
+                println!("{}", table_row(text.health(), &format!("{} {}", bar, pct)));
             }
 
             // SSD life left with bar
             if let Some(life) = smart.ssd_life_left {
                 let bar = create_health_bar(life);
-                println!("{}", table_row("ssd life", &format!("{} {}", bar, life)));
+                println!("{}", table_row(text.ssd_life(), &format!("{} {}", bar, life)));
             }
 
             if let Some(temp) = smart.temperature_c {
@@ -627,35 +636,35 @@ fn print_disk_result(result: &stress::DiskTestResult, text: &Text) -> (bool, Vec
                 println!("{}", table_row(text.model(), model));
             }
             if let Some(ref serial) = smart.serial {
-                println!("{}", table_row("serial", serial));
+                println!("{}", table_row(text.serial(), serial));
             }
             if let Some(ref firmware) = smart.firmware {
-                println!("{}", table_row("firmware", firmware));
+                println!("{}", table_row(text.firmware(), firmware));
             }
             // Extended SMART attributes
             if let Some(realloc) = smart.realloc_sectors {
                 if realloc > 0 {
-                    println!("{}", table_row("realloc sectors", &format!("{}", realloc)));
+                    println!("{}", table_row(text.realloc_sectors(), &format!("{}", realloc)));
                 }
             }
             if let Some(pending) = smart.pending_sectors {
                 if pending > 0 {
-                    println!("{}", table_row("pending sectors", &format!("{}", pending)));
+                    println!("{}", table_row(text.pending_sectors(), &format!("{}", pending)));
                 }
             }
             if let Some(events) = smart.reallocated_events {
                 if events > 0 {
-                    println!("{}", table_row("realloc events", &format!("{}", events)));
+                    println!("{}", table_row(text.realloc_events(), &format!("{}", events)));
                 }
             }
             // Total bytes written/read
             if let Some(lbas_written) = smart.total_lbas_written {
                 let tb_written = (lbas_written as f64 * 512.0) / (1024.0 * 1024.0 * 1024.0 * 1024.0);
-                println!("{}", table_row("total written", &format!("{:.1} TB", tb_written)));
+                println!("{}", table_row(text.total_written(), &format!("{:.1} TB", tb_written)));
             }
             if let Some(lbas_read) = smart.total_lbas_read {
                 let tb_read = (lbas_read as f64 * 512.0) / (1024.0 * 1024.0 * 1024.0 * 1024.0);
-                println!("{}", table_row("total read", &format!("{:.1} TB", tb_read)));
+                println!("{}", table_row(text.total_read(), &format!("{:.1} TB", tb_read)));
             }
         }
     } else {
@@ -672,6 +681,9 @@ fn print_disk_result(result: &stress::DiskTestResult, text: &Text) -> (bool, Vec
 }
 
 fn print_gpu_result(result: &stress::GpuTestResult, text: &Text) -> (bool, Vec<String>) {
+    // Reset any colors from progress bars before printing result box
+    print!("\x1b[0m");
+
     let (status_icon, healthy, issues) = match &result.health {
         HealthStatus::Healthy => ("✅", true, vec![]),
         HealthStatus::IssuesDetected(issues) => ("⚠️", false, issues.clone()),
@@ -686,8 +698,10 @@ fn print_gpu_result(result: &stress::GpuTestResult, text: &Text) -> (bool, Vec<S
     // Format VRAM
     let vram_str = if let Some(vram) = result.vram_gb {
         format!("{:.0} GB", vram)
+    } else if result.is_apple_silicon {
+        text.unified_memory().to_string()
     } else {
-        "N/A".to_string()
+        text.not_available().to_string()
     };
 
     // Format temperature with color coding
@@ -708,36 +722,36 @@ fn print_gpu_result(result: &stress::GpuTestResult, text: &Text) -> (bool, Vec<S
                     stress::gpu::ThermalPressure::Nominal => "✅ Nominal".to_string(),
                     stress::gpu::ThermalPressure::Moderate => "⚠️ Moderate".to_string(),
                     stress::gpu::ThermalPressure::Heavy => "❌ Heavy".to_string(),
-                    _ => "SoC (see CPU)".to_string(),
+                    _ => text.soc_see_cpu().to_string(),
                 }
             }))
-            .unwrap_or_else(|| "SoC (see CPU)".to_string())
+            .unwrap_or_else(|| text.soc_see_cpu().to_string())
     } else {
-        "N/A".to_string()
+        text.not_available().to_string()
     };
 
     println!("┌──────────────────────────────────────────────────────────┐");
     println!("│ 🎮 {} {:>width$} │", header_text, status_icon, width = header_padding + 2);
     println!("├──────────────────────────────────────────────────────────┤");
     // Hardware info
-    println!("{}", table_row("model", &result.gpu_model));
-    println!("{}", table_row("type", &result.gpu_type));
-    println!("{}", table_row("vram", &vram_str));
+    println!("{}", table_row(text.model(), &result.gpu_model));
+    println!("{}", table_row(text.type_label(), &text.translate_gpu_type(&result.gpu_type)));
+    println!("{}", table_row(text.ram(), &vram_str));
     println!("{}", table_row(text.temperature(), &temp_str));
 
     // Apple Silicon GPU metrics (verbose mode)
     if let Some(ref metrics) = result.apple_gpu_metrics {
         println!("├──────────────────────────────────────────────────────────┤");
-        println!("{}", table_row("GPU freq", &metrics.frequency_mhz.map_or("N/A".to_string(), |f| format!("{} MHz", f))));
-        println!("{}", table_row("GPU power", &metrics.power_mw.map_or("N/A".to_string(), |p| format!("{} mW", p))));
-        println!("{}", table_row("GPU usage", &metrics.residency_pct.map_or("N/A".to_string(), |r| format!("{:.1}%", r))));
+        println!("{}", table_row(text.gpu_freq(), &metrics.frequency_mhz.map_or(text.not_available().to_string(), |f| format!("{} MHz", f))));
+        println!("{}", table_row(text.gpu_power(), &metrics.power_mw.map_or(text.not_available().to_string(), |p| format!("{} mW", p))));
+        println!("{}", table_row(text.gpu_usage(), &metrics.residency_pct.map_or(text.not_available().to_string(), |r| format!("{:.1}%", r))));
         // Show GPU cores if available
         if let Some(cores) = metrics.gpu_cores {
-            println!("{}", table_row("GPU cores", &format!("{}", cores)));
+            println!("{}", table_row(text.gpu_cores(), &format!("{}", cores)));
         }
         // Show Metal version if available
         if let Some(ref metal) = metrics.metal_version {
-            println!("{}", table_row("Metal", metal));
+            println!("{}", table_row(text.metal(), metal));
         }
         // Show thermal pressure if available
         if let Some(ref pressure) = metrics.thermal_pressure {
@@ -749,12 +763,12 @@ fn print_gpu_result(result: &stress::GpuTestResult, text: &Text) -> (bool, Vec<S
                 stress::gpu::ThermalPressure::Sleeping => "💤 Sleeping",
                 stress::gpu::ThermalPressure::Unknown => "?",
             };
-            println!("{}", table_row("Thermal state", pressure_str));
+            println!("{}", table_row(text.thermal_state(), pressure_str));
         }
         // Show SMC temperature if different from powermetrics
         if let Some(smc_temp) = metrics.smc_temperature_c {
             if metrics.temperature_c.is_some() && Some(smc_temp) != metrics.temperature_c {
-                println!("{}", table_row("SMC temp", &format!("{:.1}°C", smc_temp)));
+                println!("{}", table_row(text.smc_temp(), &format!("{:.1}°C", smc_temp)));
             }
         }
     }

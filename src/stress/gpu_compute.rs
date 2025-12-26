@@ -9,6 +9,7 @@ use wgpu::util::DeviceExt;
 
 /// Result of GPU compute stress test
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct GpuComputeResult {
     pub gpu_name: String,
     pub backend: String,
@@ -143,8 +144,11 @@ pub async fn run_gpu_compute_stress(
         }
     }
 
+    // Clear the progress line when done (reset color first to avoid color bleeding)
     if show_progress {
-        println!();
+        print!("\x1b[0m\r\x1b[2K");  // Reset color, then clear line
+        use std::io::Write;
+        std::io::stdout().flush().unwrap();
     }
 
     Ok(GpuComputeResult {

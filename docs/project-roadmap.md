@@ -1,29 +1,32 @@
 # PChecker Project Roadmap
 
-**Version:** 0.3.0
-**Last Updated:** 2025-12-25
+**Version:** 0.2.0
+**Last Updated:** 2025-12-26
 
 ---
 
-## Current Status: v0.3.0 (Stable)
+## Current Status: v0.2.0 (Stable)
 
-**Release Date:** 2025-12-25
+**Release Date:** 2025-12-26
 **Status:** Active Development
 
 ### Completed Features ✅
 - [x] Hardware detection (CPU, GPU, RAM, Disk)
 - [x] CPU stress test with prime calculation
 - [x] RAM stress test with write/read verify
-- [x] **Disk stress test with read/write speed check** (NEW in v0.3.0)
-- [x] **SSD vs HDD detection** (NEW in v0.3.0)
+- [x] Disk stress test with read/write speed check
+- [x] GPU stress test (thermal + wgpu compute, optional)
+- [x] SSD vs HDD detection
 - [x] Temperature monitoring
 - [x] Frequency tracking and throttling detection
-- [x] Verbose mode with per-core metrics (v0.2.0)
-- [x] Visual bar charts for CPU usage (v0.2.0)
-- [x] **Platform-specific output formatting** (NEW in v0.2.0)
-- [x] **Temperature sensors list** (NEW in v0.2.0)
+- [x] Verbose mode with per-core metrics
+- [x] Visual bar charts for CPU usage
+- [x] Platform-specific output formatting
+- [x] Temperature sensors list
 - [x] Multi-language support (Vietnamese, English)
 - [x] Platform-specific implementations (macOS, Windows, Linux)
+- [x] Modular platform structure (hw/*/mod.rs + platform/ subdirs)
+- [x] GPU type translations (Integrated/Discrete)
 - [x] Comprehensive test coverage
 - [x] Size-optimized release builds
 
@@ -31,23 +34,11 @@
 
 ## Roadmap
 
-### v0.3.0 - Enhanced Testing & Output (Planned: Q1 2026)
+### v0.3.0 - Enhanced Usability (Planned: Q1 2026)
 
-**Focus:** GPU testing, disk health, automation support
+**Focus:** Automation support, improved configuration
 
 #### Features
-- [ ] **GPU Stress Test**
-  - GPU-intensive workload (shader computation)
-  - Temperature monitoring
-  - Performance metrics (FPS, render time)
-  - Stability detection
-
-- [ ] **Disk Health Check**
-  - Read/write speed tests
-  - Seek time measurement
-  - Bad sector detection
-  - SMART status reading
-
 - [ ] **Command-Line Language Selection**
   - `--lang` flag support (Vietnamese, English)
   - Remove interactive prompt when flag provided
@@ -65,6 +56,11 @@
   - Default language
   - Custom thresholds
 
+- [ ] **Improved GPU Compute Test**
+  - Enhanced stability and error handling
+  - Better cross-platform support
+  - More comprehensive GPU metrics
+
 **Dependencies:**
 - serde/serde_json for JSON output
 - serde_yaml for config files
@@ -75,7 +71,7 @@
 
 ### v0.4.0 - Expanded Hardware Support (Planned: Q2 2026)
 
-**Focus:** Additional hardware monitoring, mobile support
+**Focus:** Additional hardware monitoring, VRAM completion
 
 #### Features
 - [ ] **VRAM Detection (Windows/Linux)**
@@ -281,6 +277,13 @@
 sysinfo = "0.37"
 clap = { version = "4.5", features = ["derive"] }
 num_cpus = "1.16"
+fastrand = "2.1"
+
+# Optional
+wgpu = { version = "0.20", optional = true }
+pollster = { version = "0.3", optional = true }
+bytemuck = { version = "1.14", optional = true }
+smc = { version = "0.2", optional = true }
 ```
 
 ### Planned Additions
@@ -309,6 +312,7 @@ tokio = { version = "1.0", features = ["full"] }
 ### Current Coverage (v0.2.0)
 - Unit tests for critical modules
 - Test coverage: ~60%
+- GPU test available (optional feature)
 
 ### Future Coverage Goals
 - **v0.3.0:** 70% coverage, integration tests
@@ -423,5 +427,5 @@ This roadmap represents the planned evolution of PChecker from a v0.2.0 CLI tool
 
 ---
 
-**Last Updated:** 2025-12-25
-**Document Version:** 1.0
+**Last Updated:** 2025-12-26
+**Document Version:** 1.1

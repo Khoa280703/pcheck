@@ -136,6 +136,7 @@ pub fn run_stress_test(config: CpuTestConfig, cpu_model: String, cpu_cores: usiz
         print!("\x1b[1A");     // Move up
     }
     print!("\r\x1b[2K");  // Clear first line
+    print!("\x1b[0m");     // Reset all colors
     io::stdout().flush().unwrap();
 
     // Capture end frequency

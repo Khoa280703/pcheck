@@ -139,13 +139,9 @@ pub fn run_stress_test(
     // Try to run GPU compute stress test
     let compute_result = run_gpu_compute_stress_sync(config.duration_secs, true);
 
-    if let Ok(ref compute) = compute_result {
-        // Compute test succeeded - show GPU info
-        println!("   GPU: {} ({})", compute.gpu_name, compute.backend);
-        println!("   Frames dispatched: {}", compute.frames_dispatched);
-    } else if let Err(ref e) = compute_result {
+    if compute_result.is_err() {
         // Compute test failed - show error and fall back to thermal
-        println!("   ⚠️  GPU compute unavailable: {}", e);
+        println!("   ⚠️  GPU compute unavailable");
         println!("   Falling back to thermal monitoring...");
     }
 
@@ -259,7 +255,10 @@ pub fn run_stress_test(
                 std::io::stdout().flush().unwrap();
             }
         }
-        println!();  // New line after progress
+        // Clear progress line after thermal monitoring (reset color first)
+        print!("\x1b[0m\r\x1b[2K");  // Reset color, then clear line
+        use std::io::Write;
+        std::io::stdout().flush().unwrap();
     }
 
     // Get end temperature

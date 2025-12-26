@@ -1,7 +1,7 @@
 # PChecker Code Standards & Conventions
 
-**Version:** 0.3.0
-**Last Updated:** 2025-12-25
+**Version:** 0.2.0
+**Last Updated:** 2025-12-26
 
 ---
 
@@ -58,28 +58,40 @@ pcheck/                    # Project root (flattened from pcheck/pchecker/)
 #### src/hw/
 **Purpose:** Hardware detection and information gathering
 
+**Modular Platform Structure (v0.2.0):**
+- Each component has its own directory with `mod.rs` and `platform/` subdirectory
+- Platform-specific implementations: `macos.rs`, `windows.rs`, `linux.rs`
+
 | Module | Responsibility |
 |--------|----------------|
 | mod.rs | Module exports |
-| cpu.rs | CPU model, core count detection |
-| ram.rs | RAM total/used/free detection |
-| disk.rs | Disk name and capacity detection |
-| gpu.rs | GPU model and VRAM detection (platform-specific) |
+| cpu/ | CPU model, core count detection + platform/ |
+| ram/ | RAM total/used/free detection + platform/ |
+| disk/ | Disk name and capacity detection + platform/ |
+| gpu.rs | GPU model, VRAM, type detection + platform/ |
 
 **Conventions:**
 - Struct name: `{Component}Info` (e.g., `CpuInfo`, `RamInfo`)
-- Constructor: `new()` method
+- Constructor: `new()` method in `mod.rs`
+- Platform-specific code in `platform/{macos,windows,linux}.rs`
 - Display: `display()` or `to_string()` for formatted output
 - Use sysinfo crate for data
+- GPU type: "Integrated"/"Discrete" (English), "Tích hợp"/"Rời" (Vietnamese)
 
 #### src/stress/
 **Purpose:** Health check and stress testing
 
+**Modular Platform Structure (v0.2.0):**
+- Each component has its own directory with `mod.rs` and `platform/` subdirectory (except GPU)
+
 | Module | Responsibility |
 |--------|----------------|
 | mod.rs | HealthStatus enum, test runners |
-| cpu.rs | CPU stress test, prime calculation |
-| ram.rs | RAM stress test, write/read verify |
+| cpu/ | CPU stress test, prime calculation + platform/ |
+| ram/ | RAM stress test, write/read verify + platform/ |
+| disk/ | Disk stress test, read/write speed + smart.rs |
+| gpu.rs | GPU thermal + compute test (no platform/ subdirs) |
+| gpu_compute.rs | wgpu-based compute shader (optional) |
 
 **Conventions:**
 - Config struct: `{Component}TestConfig`
@@ -87,6 +99,7 @@ pcheck/                    # Project root (flattened from pcheck/pchecker/)
 - Test runner: `run_{component}_test(config)`
 - Health evaluator: `evaluate_{component}_health(result)`
 - Return `HealthStatus` enum (Healthy, IssuesDetected, Failed)
+- GPU test: Optional feature flag `gpu-compute` for wgpu dependencies
 
 #### src/sensors/
 **Purpose:** Real-time hardware monitoring
@@ -341,12 +354,29 @@ cargo test --lib
 sysinfo = "0.37"           # System info (CPU, RAM, components)
 clap = { version = "4.5", features = ["derive"] }  # CLI parsing
 num_cpus = "1.16"          # CPU count detection
+fastrand = "2.1"           # Random number generation
+
+# Optional: GPU compute stress test
+wgpu = { version = "0.20", optional = true }
+pollster = { version = "0.3", optional = true }
+bytemuck = { version = "1.14", optional = true }
+
+# Optional: Apple SMC temperature reading (macOS only)
+smc = { version = "0.2", optional = true }
+
+[features]
+default = []
+gpu-compute = ["wgpu", "pollster", "bytemuck"]
+apple-smc = ["smc"]
 ```
 
 ### Dependency Criteria
 - **sysinfo:** Cross-platform system info (required)
 - **clap:** CLI argument parsing (required)
 - **num_cpus:** CPU core detection (required)
+- **fastrand:** Random number generation (required)
+- **wgpu/pollster/bytemuck:** GPU compute test (optional)
+- **smc:** Apple SMC temperature (optional, macOS only)
 - **Future:** TUI library, logging, serialization
 
 ### Forbidden Dependencies
@@ -523,5 +553,5 @@ feat: add verbose mode for per-core CPU metrics
 
 ---
 
-**Last Updated:** 2025-12-25
-**Document Version:** 1.0
+**Last Updated:** 2025-12-26
+**Document Version:** 1.1

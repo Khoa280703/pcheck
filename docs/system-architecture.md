@@ -1,7 +1,7 @@
 # PChecker System Architecture
 
-**Version:** 0.3.0
-**Last Updated:** 2025-12-25
+**Version:** 0.2.0
+**Last Updated:** 2025-12-26
 
 ---
 
@@ -17,7 +17,7 @@ PChecker is a cross-platform hardware detection and health check CLI tool built 
 ┌─────────────────────────────────────────────────────────────┐
 │                         CLI Layer                            │
 │                    (main.rs + clap)                          │
-│  - Argument parsing                                          │
+│  - Argument parsing (new: --cpu-stress, --ram-stress, etc)  │
 │  - Language selection                                        │
 │  - Mode orchestration (info/stress)                          │
 └─────────────────────────────────────────────────────────────┘
@@ -27,6 +27,9 @@ PChecker is a cross-platform hardware detection and health check CLI tool built 
     ┌───────────────────┐       ┌──────────────────────┐
     │    Info Mode      │       │   Stress Mode        │
     │  (hw modules)     │       │ (stress modules)     │
+    │  Modular:         │       │  Modular:            │
+    │  cpu/, ram/,      │       │  cpu/, ram/,         │
+    │  disk/, gpu.rs    │       │  disk/, gpu.rs       │
     └───────────────────┘       └──────────────────────┘
                 │                           │
                 ▼                           ▼
@@ -34,14 +37,17 @@ PChecker is a cross-platform hardware detection and health check CLI tool built 
     │ Hardware Detection│       │  Health Checks       │
     │  - CPU, GPU       │       │  - CPU Stress Test   │
     │  - RAM, Disk      │       │  - RAM Stress Test   │
-    └───────────────────┘       └──────────────────────┘
-                │                           │
+    │  Platform:        │       │  - Disk Stress Test  │
+    │  macos/win/lin    │       │  - GPU Stress Test   │
+    └───────────────────┘       │  (wgpu + thermal)    │
+                │               └──────────────────────┘
                 └─────────────┬─────────────┘
                               ▼
                 ┌──────────────────────────┐
                 │    Platform Layer        │
                 │  (platform modules)      │
                 │  - macOS, Windows, Linux │
+                │  - Modular subdirs       │
                 └──────────────────────────┘
                               │
                               ▼
@@ -89,17 +95,19 @@ Stress Mode: Run CPU Test → Run RAM Test → Print Summary → Exit
 #### 2. Hardware Detection (hw/)
 **Purpose:** Detect and display system hardware information
 
-**Submodules:**
-- `cpu.rs`: CPU model, core count
-- `ram.rs`: RAM total, used, free
-- `disk.rs`: Disk name, capacity
-- `gpu.rs`: GPU model, VRAM (platform-specific)
+**Submodules (Modular Platform Structure):**
+- `cpu/`: CPU model, core count + platform/{macos,windows,linux}.rs
+- `ram/`: RAM total, used, free + platform/{macos,windows,linux}.rs
+- `disk/`: Disk name, capacity + platform/{macos,windows,linux}.rs
+- `gpu.rs`: GPU model, VRAM, type + platform/{macos,windows,linux}.rs
 
 **Architecture:**
 ```
 CpuInfo::new()
     ↓
 sysinfo::System::new_all()
+    ↓
+Platform-specific detection (mod.rs delegates to platform/)
     ↓
 Extract CPU info (model, cores)
     ↓
@@ -126,16 +134,20 @@ pub struct DiskInfo {
 
 pub struct GpuInfo {
     pub model: String,
+    pub gpu_type: String,  // "Integrated"/"Discrete" or localized
     pub vram_gb: Option<f64>,  // macOS only
 }
 ```
 
 #### 3. Stress Testing (stress/)
-**Purpose:** Run health checks on CPU and RAM
+**Purpose:** Run health checks on CPU, RAM, Disk, and GPU
 
-**Submodules:**
-- `cpu.rs`: CPU stress test (prime calculation)
-- `ram.rs`: RAM stress test (write/read verify)
+**Submodules (Modular Platform Structure):**
+- `cpu/`: CPU stress test (prime calculation) + platform/{macos,windows,linux}.rs
+- `ram/`: RAM stress test (write/read verify) + platform/{macos,windows,linux}.rs
+- `disk/`: Disk stress test (read/write speed) + smart.rs
+- `gpu.rs`: GPU thermal + compute test
+- `gpu_compute.rs`: wgpu-based compute shader test (optional)
 - `mod.rs`: Health status enum, test runners
 
 **CPU Test Architecture:**
@@ -209,6 +221,34 @@ fn evaluate_ram_health(result: &RamTestResult) -> HealthStatus {
     if read_speed < 0.3 GB/s → Failed
     else → Healthy
 }
+
+// GPU Health Rules
+fn evaluate_gpu_health(result: &GpuTestResult) -> HealthStatus {
+    if temp > 95°C → Failed
+    if temp > 85°C → IssuesDetected
+    else → Healthy
+}
+```
+
+**GPU Test Architecture:**
+```
+GpuTestConfig { duration_secs, verbose }
+    ↓
+run_gpu_test(config, gpu_model, gpu_type, vram_gb)
+    ↓
+Get start temperature
+    ↓
+Try wgpu compute shader (optional feature)
+    ↓
+If compute fails → Fall back to thermal monitoring
+    ↓
+Track temperature (start, end, max)
+    ↓
+Platform-specific metrics (Apple Silicon)
+    ↓
+Evaluate health (temperature-based)
+    ↓
+Return GpuTestResult
 ```
 
 #### 4. Sensors Monitoring (sensors/)
@@ -687,5 +727,5 @@ fn evaluate_cpu_health(result: &CpuTestResult) -> HealthStatus {
 
 ---
 
-**Last Updated:** 2025-12-25
-**Document Version:** 1.0
+**Last Updated:** 2025-12-26
+**Document Version:** 1.1

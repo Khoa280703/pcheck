@@ -1,5 +1,7 @@
 // Common GPU types and traits
 
+use crate::lang::Text;
+
 /// GPU type classification
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GpuType {
@@ -14,6 +16,14 @@ impl GpuType {
             GpuType::Integrated => "Integrated",
             GpuType::Discrete => "Discrete",
             GpuType::Unknown => "Unknown",
+        }
+    }
+
+    pub fn as_localized_str<'a>(&'a self, text: &'a Text) -> &'a str {
+        match self {
+            GpuType::Integrated => text.gpu_type_integrated(),
+            GpuType::Discrete => text.gpu_type_discrete(),
+            GpuType::Unknown => text.gpu_type_unknown(),
         }
     }
 
@@ -55,8 +65,18 @@ pub struct GpuInfo {
 }
 
 impl GpuInfo {
+    #[allow(dead_code)]
     pub fn display(&self) -> String {
         let type_str = format!("[{}]", self.gpu_type.as_str());
+        if let Some(vram) = self.vram_gb {
+            format!("{} {} ({:.0} GB)", self.model, type_str, vram)
+        } else {
+            format!("{} {}", self.model, type_str)
+        }
+    }
+
+    pub fn display_localized(&self, text: &Text) -> String {
+        let type_str = format!("[{}]", self.gpu_type.as_localized_str(text));
         if let Some(vram) = self.vram_gb {
             format!("{} {} ({:.0} GB)", self.model, type_str, vram)
         } else {

@@ -101,7 +101,7 @@ pub fn run_stress_test(config: RamTestConfig, ram_total_gb: f64) -> RamTestResul
         // Show progress every 100 chunks
         if (i + 1) % 100 == 0 || i + 1 == total_chunks {
             let progress = ((i + 1) * 100 / total_chunks) as u8;
-            print!("\r⏳ Đang kiểm tra RAM... Đang xác thực dữ liệu... {}%", progress);
+            print!("\r⏳ Checking RAM... Verifying data... {}%", progress);
             io::stdout().flush().unwrap();
         }
     }

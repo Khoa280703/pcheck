@@ -1,8 +1,8 @@
 # PChecker Codebase Summary
 
-**Version:** 0.3.0
-**Last Updated:** 2025-12-25
-**Total Lines:** ~2,500 lines of Rust code
+**Version:** 0.2.0
+**Last Updated:** 2025-12-26
+**Total Lines:** ~5,156 lines of Rust code
 
 ---
 
@@ -17,20 +17,22 @@ PChecker is a cross-platform hardware detection and health check CLI tool writte
 ```
 pcheck/                    # Project root
 ├── src/
-│   ├── main.rs                   (334 lines) - CLI entry point, orchestration
+│   ├── main.rs                   (780 lines) - CLI entry point, orchestration
 │   │
-│   ├── hw/                       - Hardware detection modules
-│   │   ├── mod.rs                (40 lines) - Module exports
-│   │   ├── cpu.rs                (50 lines) - CPU model & core detection
-│   │   ├── ram.rs                (40 lines) - RAM total/used/free detection
-│   │   ├── disk.rs               (45 lines) - Disk name & capacity detection
-│   │   └── gpu.rs                (120 lines) - GPU detection (platform-specific)
+│   ├── hw/                       - Hardware detection modules (modular)
+│   │   ├── mod.rs                (12 lines) - Module exports
+│   │   ├── cpu/                  - CPU detection + platform subdirs
+│   │   ├── ram/                  - RAM detection + platform subdirs
+│   │   ├── disk/                 - Disk detection + platform subdirs
+│   │   └── gpu.rs                (150+ lines) - GPU detection + platform subdirs
 │   │
-│   ├── stress/                   - Health check modules
-│   │   ├── mod.rs                (60 lines) - HealthStatus enum, test runners
-│   │   ├── cpu.rs                (520 lines) - CPU stress test (with verbose mode)
-│   │   ├── ram.rs                (205 lines) - RAM stress test (write/read verify)
-│   │   └── disk.rs               (180 lines) - Disk stress test (read/write speed)
+│   ├── stress/                   - Health check modules (modular)
+│   │   ├── mod.rs                (22 lines) - HealthStatus enum, exports
+│   │   ├── cpu/                  - CPU test + platform subdirs
+│   │   ├── ram/                  - RAM test + platform subdirs
+│   │   ├── disk/                 - Disk test + smart.rs
+│   │   ├── gpu.rs                (250+ lines) - GPU thermal + compute test
+│   │   └── gpu_compute.rs        (200+ lines) - wgpu compute shader
 │   │
 │   ├── sensors/                  - Hardware monitoring
 │   │   ├── mod.rs                (30 lines) - Sensor exports
@@ -42,7 +44,7 @@ pcheck/                    # Project root
 │   │   └── mod.rs                (25 lines) - Platform detection (macOS/Windows/Linux)
 │   │
 │   ├── fmt.rs                    (200 lines) - Output formatting, ANSI colors, progress bars
-│   ├── lang.rs                   (120 lines) - Multi-language support (Vietnamese/English)
+│   ├── lang.rs                   (568 lines) - Multi-language support (Vietnamese/English)
 │   └── prompt.rs                 (30 lines) - Interactive prompts
 │
 ├── docs/                         - Project documentation
@@ -69,14 +71,17 @@ pcheck/                    # Project root
 
 ## Module Details
 
-### main.rs (334 lines)
+### main.rs (780 lines)
 **Purpose:** CLI entry point and orchestration
 
 **Key Components:**
 - `Args` struct: Clap-derived CLI arguments
-  - `--stress` / `-s`: Run health check mode
+  - `--stress` / `-s`: Run all health checks (CPU + RAM + Disk + GPU)
+  - `--cpu-stress`, `--ram-stress`, `--disk-stress`, `--gpu-stress`: Individual tests
   - `--duration` / `-d`: Test duration in seconds
   - `--quick`: Quick 15-second test
+  - `--verbose` / `-v`: Detailed metrics
+  - `--all-disks`, `--disk-index`, `--list-disks`: Disk selection
   - `--verbose` / `-v`: Show detailed per-core metrics
 
 **Functions:**
@@ -93,7 +98,7 @@ pcheck/                    # Project root
 
 ### hw/ - Hardware Detection
 
-#### hw/mod.rs (40 lines)
+#### hw/mod.rs (12 lines)
 **Purpose:** Module exports for hardware detection
 
 **Exports:**
@@ -102,8 +107,14 @@ pcheck/                    # Project root
 
 ---
 
-#### hw/cpu.rs (50 lines)
+#### hw/cpu/ (modular structure)
 **Purpose:** CPU model and core count detection
+
+**Structure:**
+- `mod.rs`: Main CPU detection logic
+- `platform/macos.rs`: macOS-specific CPU detection
+- `platform/windows.rs`: Windows-specific CPU detection
+- `platform/linux.rs`: Linux-specific CPU detection
 
 **Struct:**
 ```rust
@@ -113,15 +124,16 @@ pub struct CpuInfo {
 }
 ```
 
-**Implementation:**
-- Uses `sysinfo::System` to detect CPU
-- Extracts CPU brand string and physical core count
-- Returns `CpuInfo` with model name and core count
-
 ---
 
-#### hw/ram.rs (40 lines)
+#### hw/ram/ (modular structure)
 **Purpose:** RAM total, used, and free memory detection
+
+**Structure:**
+- `mod.rs`: Main RAM detection logic
+- `platform/macos.rs`: macOS-specific RAM detection
+- `platform/windows.rs`: Windows-specific RAM detection
+- `platform/linux.rs`: Linux-specific RAM detection
 
 **Struct:**
 ```rust
@@ -132,62 +144,42 @@ pub struct RamInfo {
 }
 ```
 
-**Implementation:**
-- Uses `sysinfo::System` to read memory info
-- Converts bytes to GB
-- Calculates free from total - used
-
 ---
 
-#### hw/disk.rs (45 lines)
+#### hw/disk/ (modular structure)
 **Purpose:** Disk name and total capacity detection
 
-**Struct:**
-```rust
-pub struct DiskInfo {
-    pub name: String,
-    pub total_gb: f64,
-}
-
-impl DiskInfo {
-    pub fn display(&self) -> String { /* format */ }
-}
-```
-
-**Implementation:**
-- Uses `sysinfo::System` to list disks
-- Returns first disk found
-- Formats display with name and capacity
+**Structure:**
+- `mod.rs`: Main disk detection logic
+- `platform/macos.rs`: macOS-specific disk detection
+- `platform/windows.rs`: Windows-specific disk detection
+- `platform/linux.rs`: Linux-specific disk detection
 
 ---
 
-#### hw/gpu.rs (120 lines)
+#### hw/gpu.rs + platform/ (150+ lines)
 **Purpose:** GPU detection with platform-specific implementations
+
+**Structure:**
+- `gpu.rs`: Main GPU detection logic + common types
+- `platform/macos.rs`: macOS-specific GPU detection
+- `platform/windows.rs`: Windows-specific GPU detection
+- `platform/linux.rs`: Linux-specific GPU detection
 
 **Struct:**
 ```rust
 pub struct GpuInfo {
     pub model: String,
+    pub gpu_type: String,  // "Integrated"/"Discrete" or "Tích hợp"/"Rời"
     pub vram_gb: Option<f64>,
 }
-
-impl GpuInfo {
-    pub fn display(&self) -> String { /* format */ }
-}
 ```
-
-**Implementation:**
-- `get_gpu_info()`: Platform-specific GPU detection
-  - **macOS:** Uses `system_profiler SPDisplaysDataType`
-  - **Windows:** Uses PowerShell `Get-WmiObject Win32_VideoController`
-  - **Linux:** Uses `lspci -vnnn`
-- VRAM detection: macOS only (Windows/Linux TODO)
 
 ---
 
 ### stress/ - Health Check Modules
 
-#### stress/mod.rs (60 lines)
+#### stress/mod.rs (22 lines)
 **Purpose:** Health status enum and test runner exports
 
 **Enum:**
@@ -202,7 +194,10 @@ pub enum HealthStatus {
 **Exports:**
 - `CpuTestConfig`, `CpuTestResult`
 - `RamTestConfig`, `RamTestResult`
-- `run_cpu_test()`, `run_ram_test()`
+- `DiskTestConfig`, `DiskTestResult`
+- `GpuTestConfig`, `GpuTestResult`
+- `run_cpu_test()`, `run_ram_test()`, `run_disk_test()`, `run_gpu_test()`
+- `gpu_compute` module for wgpu-based testing
 
 ---
 
@@ -265,8 +260,46 @@ pub struct CpuTestResult {
 
 ---
 
-#### stress/ram.rs (205 lines)
+#### stress/cpu/ (modular structure)
+**Purpose:** CPU stress test with verbose mode support
+
+**Structure:**
+- `mod.rs`: Main CPU test logic + platform subdirs
+- `platform/macos.rs`: macOS-specific CPU testing
+- `platform/windows.rs`: Windows-specific CPU testing
+- `platform/linux.rs`: Linux-specific CPU testing
+
+**Structs:**
+```rust
+pub struct CpuTestConfig {
+    pub duration_secs: u64,
+    pub thread_count: Option<usize>,
+    pub verbose: bool,
+}
+
+pub struct CpuTestResult {
+    pub operations: u64,
+    pub ops_per_second: f64,
+    pub avg_op_time_ms: f64,
+    pub variance_pct: f64,
+    pub temperature: Option<CpuTemp>,
+    pub frequency_start: CpuFrequency,
+    pub frequency_end: CpuFrequency,
+    pub freq_drop_pct: f64,
+    pub health: HealthStatus,
+}
+```
+
+---
+
+#### stress/ram/ (modular structure)
 **Purpose:** RAM stress test with write/read verification
+
+**Structure:**
+- `mod.rs`: Main RAM test logic + platform subdirs
+- `platform/macos.rs`: macOS-specific RAM testing
+- `platform/windows.rs`: Windows-specific RAM testing
+- `platform/linux.rs`: Linux-specific RAM testing
 
 **Structs:**
 ```rust
@@ -283,20 +316,78 @@ pub struct RamTestResult {
 }
 ```
 
-**Key Functions:**
-- `run_ram_test(config)`: Main RAM stress test
-  - Allocates 80% of available RAM (max 16GB)
-  - Write test: Fill buffer with pattern (0xAA55_AA55_AA55_AA55)
-  - Read test: Verify all data matches pattern
-  - Measure write/read speeds
+---
 
-- `evaluate_ram_health(result)`: Health evaluation logic
-  - Failed: Errors > 0, allocation < 0.1GB, speeds < 0.3 GB/s
-  - Healthy: Otherwise
+#### stress/disk/ (modular structure)
+**Purpose:** Disk stress test with read/write speed check
 
-**Tests (lines 162-204):**
-- `test_ram_test_small`: 100MB RAM test
-- `test_evaluate_ram_health`: All health rule branches
+**Structure:**
+- `mod.rs`: Main disk test logic
+- `smart.rs`: SMART data reading
+
+**Structs:**
+```rust
+pub struct DiskTestConfig {
+    pub disk_name: String,
+    pub disk_type: String,
+    pub test_write: bool,
+}
+
+pub struct DiskTestResult {
+    pub disk_name: String,
+    pub disk_type: String,
+    pub read_speed_gb_s: f64,
+    pub write_speed_gb_s: Option<f64>,
+    pub health: HealthStatus,
+}
+```
+
+---
+
+#### stress/gpu.rs (250+ lines)
+**Purpose:** GPU thermal and compute stress test
+
+**Key Features:**
+- Thermal monitoring during stress test
+- Optional wgpu-based compute shader test
+- GPU type detection (Integrated/Discrete)
+- Platform-specific metrics (Apple Silicon)
+
+**Structs:**
+```rust
+pub struct GpuTestConfig {
+    pub duration_secs: u64,
+    pub verbose: bool,
+}
+
+pub struct GpuTestResult {
+    pub gpu_model: String,
+    pub gpu_type: String,
+    pub vram_gb: Option<f64>,
+    pub temperature_start: Option<GpuTemp>,
+    pub temperature_end: Option<GpuTemp>,
+    pub temperature_max: Option<f32>,
+    pub is_apple_silicon: bool,
+    pub apple_gpu_metrics: Option<AppleGpuMetrics>,
+    pub health: HealthStatus,
+}
+```
+
+---
+
+#### stress/gpu_compute.rs (200+ lines)
+**Purpose:** wgpu-based compute shader stress test
+
+**Key Features:**
+- WGSL compute shader for GPU load
+- Optional feature flag (gpu-compute)
+- Cross-platform GPU testing
+- Graceful fallback to thermal monitoring
+
+**Dependencies:**
+- `wgpu = "0.20"` (optional)
+- `pollster = "0.3"` (optional)
+- `bytemuck = "1.14"` (optional)
 
 ---
 
@@ -491,6 +582,20 @@ edition = "2021"
 sysinfo = "0.37"           # System info (CPU, RAM, components)
 clap = { version = "4.5", features = ["derive"] }  # CLI parsing
 num_cpus = "1.16"          # CPU count detection
+fastrand = "2.1"           # Random number generation
+
+# Optional: GPU compute stress test
+wgpu = { version = "0.20", optional = true }
+pollster = { version = "0.3", optional = true }
+bytemuck = { version = "1.14", optional = true }
+
+# Optional: Apple SMC temperature reading (macOS only)
+smc = { version = "0.2", optional = true }
+
+[features]
+default = []
+gpu-compute = ["wgpu", "pollster", "bytemuck"]
+apple-smc = ["smc"]
 
 [profile.release]
 opt-level = "z"            # Optimize for size
@@ -618,19 +723,17 @@ cargo build --release
 2. **Temperature Availability:** May return None on some systems (no fallback)
 3. **Language Selection:** Interactive only - no `--lang` flag support
 4. **Test Coverage:** No integration tests for full workflow
-5. **Disk Health:** No stress test for disks (only detection)
-6. **GPU Stress:** No GPU stress testing implemented
+5. **GPU Compute Test:** Requires feature flag (not default)
 
 ---
 
 ## Future Enhancements
 
 ### v0.3.0 (Planned)
-- GPU stress testing
-- Disk health check (read/write tests)
 - Command-line language selection (`--lang` flag)
 - JSON output mode for automation
 - Config file support
+- Improved GPU compute test stability
 
 ### v0.4.0 (Planned)
 - VRAM detection for Windows/Linux
@@ -646,5 +749,5 @@ cargo build --release
 
 ---
 
-**Last Updated:** 2025-12-25
-**Document Version:** 1.0
+**Last Updated:** 2025-12-26
+**Document Version:** 1.1

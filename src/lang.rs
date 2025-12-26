@@ -346,4 +346,222 @@ impl Text {
             Language::English => "Testing GPU",
         }
     }
+
+    // Additional labels for result boxes
+    pub fn disk_label(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "đĩa",
+            Language::English => "disk",
+        }
+    }
+
+    pub fn size(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "kích thước",
+            Language::English => "size",
+        }
+    }
+
+    pub fn fs(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "fs",
+            Language::English => "fs",
+        }
+    }
+
+    pub fn type_label(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "kiểu",
+            Language::English => "type",
+        }
+    }
+
+    pub fn ssd(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "SSD",
+            Language::English => "SSD",
+        }
+    }
+
+    pub fn hdd(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "HDD",
+            Language::English => "HDD",
+        }
+    }
+
+    pub fn unified_memory(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Unified (chia sẻ)",
+            Language::English => "Unified (with CPU)",
+        }
+    }
+
+    pub fn soc_see_cpu(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "SoC (xem CPU)",
+            Language::English => "SoC (see CPU)",
+        }
+    }
+
+    pub fn not_available(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "N/A",
+            Language::English => "N/A",
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn sensors(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Cảm biến",
+            Language::English => "Sensors",
+        }
+    }
+
+    // SMART disk health labels
+    pub fn health(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "sức khỏe",
+            Language::English => "health",
+        }
+    }
+
+    pub fn ssd_life(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "tuổi thọ SSD",
+            Language::English => "SSD life",
+        }
+    }
+
+    pub fn serial(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "số serial",
+            Language::English => "serial",
+        }
+    }
+
+    pub fn firmware(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "firmware",
+            Language::English => "firmware",
+        }
+    }
+
+    pub fn realloc_sectors(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "realloc sectors",
+            Language::English => "realloc sectors",
+        }
+    }
+
+    pub fn pending_sectors(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "pending sectors",
+            Language::English => "pending sectors",
+        }
+    }
+
+    pub fn realloc_events(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "realloc events",
+            Language::English => "realloc events",
+        }
+    }
+
+    pub fn total_written(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "tổng đã ghi",
+            Language::English => "total written",
+        }
+    }
+
+    pub fn total_read(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "tổng đã đọc",
+            Language::English => "total read",
+        }
+    }
+
+    // GPU specific labels
+    pub fn gpu_freq(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "tần số",
+            Language::English => "GPU freq",
+        }
+    }
+
+    pub fn gpu_power(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "công suất",
+            Language::English => "GPU power",
+        }
+    }
+
+    pub fn gpu_usage(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "sử dụng",
+            Language::English => "GPU usage",
+        }
+    }
+
+    pub fn gpu_cores(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "nhân GPU",
+            Language::English => "GPU cores",
+        }
+    }
+
+    pub fn metal(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Metal",
+            Language::English => "Metal",
+        }
+    }
+
+    pub fn thermal_state(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "trạng thái nhiệt",
+            Language::English => "Thermal state",
+        }
+    }
+
+    pub fn smc_temp(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "nhiệt độ SMC",
+            Language::English => "SMC temp",
+        }
+    }
+
+    // GPU type values (not labels)
+    pub fn gpu_type_integrated(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Tích hợp",
+            Language::English => "Integrated",
+        }
+    }
+
+    pub fn gpu_type_discrete(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Rời",
+            Language::English => "Discrete",
+        }
+    }
+
+    pub fn gpu_type_unknown(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Không rõ",
+            Language::English => "Unknown",
+        }
+    }
+
+    /// Translate GPU type string (Integrated/Discrete/Unknown)
+    pub fn translate_gpu_type(&self, gpu_type: &str) -> String {
+        match gpu_type {
+            "Integrated" => self.gpu_type_integrated().to_string(),
+            "Discrete" => self.gpu_type_discrete().to_string(),
+            "Unknown" => self.gpu_type_unknown().to_string(),
+            other => other.to_string(),
+        }
+    }
 }

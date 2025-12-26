@@ -1,7 +1,7 @@
 # PChecker Project Overview & PDR
 
-**Version:** 0.3.0
-**Last Updated:** 2025-12-25
+**Version:** 0.2.0
+**Last Updated:** 2025-12-26
 **Status:** Active Development
 
 ---
@@ -100,7 +100,39 @@ The system shall provide detailed output when `--verbose` flag is used:
 - Updates do not cause flicker (proper terminal clearing)
 - Sensor information available when supported by hardware
 
-#### FR-5: Multi-Language Support
+#### FR-5: Disk Health Check
+**Priority:** Medium
+**Status:** Implemented (v0.2.0)
+
+The system shall:
+- Run disk read/write speed tests
+- Detect SSD vs HDD type
+- Support multi-disk selection
+- Display SMART data when available
+
+**Acceptance Criteria:**
+- Sequential read/write speed measurement
+- Disk type detection (SSD/HDD)
+- Support for --all-disks, --disk-index, --list-disks flags
+- Verbose mode shows SMART attributes
+
+#### FR-6: GPU Health Check
+**Priority:** Medium
+**Status:** Implemented (v0.2.0)
+
+The system shall:
+- Run GPU thermal monitoring during stress
+- Optional wgpu-based compute shader test
+- Detect integrated vs discrete GPU
+- Translate GPU type to Vietnamese/English
+
+**Acceptance Criteria:**
+- Temperature tracking (start, end, max)
+- Compute shader test via feature flag (gpu-compute)
+- GPU type detection: "Integrated"/"Tích hợp" vs "Discrete"/"Rời"
+- Graceful fallback when compute unavailable
+
+#### FR-7: Multi-Language Support
 **Priority:** Medium
 **Status:** Implemented (v0.1.0)
 
@@ -114,15 +146,17 @@ The system shall support:
 - Language selection persistent during session
 - No hardcoded strings in output paths
 
-#### FR-6: CLI Interface
+#### FR-8: CLI Interface
 **Priority:** High
 **Status:** Implemented (v0.2.0)
 
 The system shall support:
-- `--stress` / `-s`: Run health check mode
+- `--stress` / `-s`: Run all health checks (CPU + RAM + Disk + GPU)
+- `--cpu-stress`, `--ram-stress`, `--disk-stress`, `--gpu-stress`: Individual tests
 - `--duration` / `-d`: Set test duration in seconds
 - `--quick`: Quick 15-second test
-- `--verbose` / `-v`: Detailed per-core metrics
+- `--verbose` / `-v`: Detailed metrics
+- `--all-disks`, `--disk-index`, `--list-disks`: Disk selection
 - Flag combinations (e.g., `-s -d 30 -v`)
 
 **Acceptance Criteria:**
@@ -229,17 +263,19 @@ The system shall support:
 pcheck/                    # Project root
 ├── src/
 │   ├── main.rs           # CLI entry point, orchestration
-│   ├── hw/               # Hardware detection modules
+│   ├── hw/               # Hardware detection modules (modular)
 │   │   ├── mod.rs        # Module exports
-│   │   ├── cpu.rs        # CPU model & core detection
-│   │   ├── ram.rs        # RAM total/used memory detection
-│   │   ├── disk.rs       # Disk storage detection
-│   │   └── gpu.rs        # GPU detection (platform-specific)
-│   ├── stress/           # Health check modules
+│   │   ├── cpu/          # CPU detection + platform/{macos,windows,linux}.rs
+│   │   ├── ram/          # RAM detection + platform/{macos,windows,linux}.rs
+│   │   ├── disk/         # Disk detection + platform/{macos,windows,linux}.rs
+│   │   └── gpu.rs        # GPU detection + platform/{macos,windows,linux}.rs
+│   ├── stress/           # Health check modules (modular)
 │   │   ├── mod.rs        # Health status enum, exports
-│   │   ├── cpu.rs        # CPU stress test (prime calculation)
-│   │   ├── ram.rs        # RAM stress test (write/read verify)
-│   │   └── disk.rs       # Disk stress test (read/write speed)
+│   │   ├── cpu/          # CPU test + platform/{macos,windows,linux}.rs
+│   │   ├── ram/          # RAM test + platform/{macos,windows,linux}.rs
+│   │   ├── disk/         # Disk test + smart.rs
+│   │   ├── gpu.rs        # GPU thermal + compute test
+│   │   └── gpu_compute.rs # wgpu-based compute shader
 │   ├── sensors/          # Hardware monitoring
 │   │   ├── mod.rs        # Sensor module exports
 │   │   ├── temp.rs       # CPU temperature reading
@@ -295,34 +331,36 @@ Formatted Output (Tables, Progress Bars, Color Codes)
 
 ## Current Status & Features
 
-### Implemented (v0.3.0)
+### Implemented (v0.2.0)
 - [x] Hardware detection (CPU, GPU, RAM, Disk)
 - [x] CPU stress test with prime calculation
 - [x] RAM stress test with write/read verify
 - [x] Disk stress test with read/write speed check
+- [x] GPU stress test (wgpu-based, optional)
 - [x] Temperature monitoring
 - [x] Frequency tracking and throttling detection
 - [x] Verbose mode with per-core metrics
 - [x] Multi-language support (Vietnamese, English)
 - [x] Platform-specific implementations (macOS, Windows, Linux)
-- [x] Comprehensive test coverage
+- [x] Modular platform structure (hw/*/mod.rs + platform/ subdirs)
+- [x] GPU type translations (Integrated/Discrete)
 
 ### Known Limitations
 - VRAM detection incomplete on Windows/Linux (TODO)
 - Temperature reading may fail on some systems (no fallback)
 - Language selection is interactive only (no `--lang` flag)
 - No integration tests for full workflow
-- GPU stress testing not implemented
+- GPU compute test requires feature flag (not default)
 
 ---
 
 ## Future Roadmap
 
-### v0.4.0 (Planned)
-- [ ] GPU stress testing
+### v0.3.0 (Planned)
 - [ ] Command-line language selection (`--lang` flag)
 - [ ] JSON output mode for automation
 - [ ] Config file support
+- [ ] Improved GPU compute test stability
 
 ### v0.5.0 (Planned)
 - [ ] VRAM detection for Windows/Linux
@@ -377,6 +415,20 @@ Formatted Output (Tables, Progress Bars, Color Codes)
 sysinfo = "0.37"           # System info (CPU, RAM, components)
 clap = { version = "4.5", features = ["derive"] }  # CLI parsing
 num_cpus = "1.16"          # CPU count detection
+fastrand = "2.1"           # Random number generation
+
+# Optional: GPU compute stress test
+wgpu = { version = "0.20", optional = true }
+pollster = { version = "0.3", optional = true }
+bytemuck = { version = "1.14", optional = true }
+
+# Optional: Apple SMC temperature reading (macOS only)
+smc = { version = "0.2", optional = true }
+
+[features]
+default = []
+gpu-compute = ["wgpu", "pollster", "bytemuck"]
+apple-smc = ["smc"]
 ```
 
 ### Build Dependencies
@@ -398,5 +450,5 @@ Distribution:
 
 ---
 
-**Last Updated:** 2025-12-25
-**Document Version:** 1.0
+**Last Updated:** 2025-12-26
+**Document Version:** 1.1

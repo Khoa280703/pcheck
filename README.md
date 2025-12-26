@@ -4,7 +4,7 @@
 
 PChecker detects system hardware information and runs stress tests to identify potential hardware issues. Supports macOS (Apple Silicon), Windows, and Linux.
 
-**Version:** 0.3.0
+**Version:** 0.2.0
 **Repository:** https://github.com/Khoa280703/pcheck
 **License:** MIT
 
@@ -22,8 +22,10 @@ PChecker detects system hardware information and runs stress tests to identify p
 ### Health Check (Stress Mode)
 - **CPU Stress Test:** Multi-threaded prime calculation to detect instability, overheating, and throttling
 - **RAM Stress Test:** Memory allocation with write/read verification to detect faulty RAM
+- **Disk Stress Test:** Read/write speed testing with SMART data (optional)
+- **GPU Stress Test:** wgpu-based compute shader testing (optional, requires feature flag)
 - **Health Evaluation:** Automatic assessment with detailed metrics
-- **Temperature Monitoring:** Real-time CPU temperature tracking
+- **Temperature Monitoring:** Real-time CPU/GPU temperature tracking
 - **Frequency Tracking:** Detects thermal throttling via frequency drops
 
 ### Verbose Mode (New in v0.2.0)
@@ -63,7 +65,9 @@ cargo build --release
 
 ### Requirements
 - Rust 1.70+ (edition 2021)
-- Dependencies: `sysinfo`, `clap`, `num_cpus`
+- Dependencies: `sysinfo`, `clap`, `num_cpus`, `fastrand`
+- Optional: `wgpu`, `pollster`, `bytemuck` (for GPU compute test)
+- Optional: `smc` (for Apple SMC temperature reading on macOS)
 
 ---
 
@@ -75,8 +79,14 @@ cargo build --release
 # Info mode (default) - Detect and display hardware info
 pchecker
 
-# Health check mode (60s CPU test, 30s RAM test)
+# Health check mode (CPU + RAM + Disk + GPU)
 pchecker --stress
+
+# Run individual stress tests
+pchecker --cpu-stress              # CPU only
+pchecker --ram-stress              # RAM only
+pchecker --disk-stress             # Disk only
+pchecker --gpu-stress              # GPU only (requires feature flag)
 
 # Health check with custom duration
 pchecker --stress --duration 120
@@ -87,6 +97,11 @@ pchecker --stress --quick
 # Verbose mode - Show detailed per-core metrics
 pchecker --stress --verbose
 
+# Disk-specific options
+pchecker --list-disks              # List all available disks
+pchecker --disk-stress --all-disks # Test all disks
+pchecker --disk-stress --disk-index 1  # Test specific disk
+
 # Combined flags (short form)
 pchecker -s -d 30 -v
 ```
@@ -95,10 +110,17 @@ pchecker -s -d 30 -v
 
 | Flag | Short | Description | Default |
 |------|-------|-------------|---------|
-| `--stress` | `-s` | Run health check mode (CPU + RAM) | - |
+| `--stress` | `-s` | Run all health checks (CPU + RAM + Disk + GPU) | - |
+| `--cpu-stress` | - | Run CPU stress test only | - |
+| `--ram-stress` | - | Run RAM stress test only | - |
+| `--disk-stress` | - | Run Disk stress test only | - |
+| `--gpu-stress` | - | Run GPU stress test only | - |
 | `--duration` | `-d` | Test duration in seconds | 60 |
 | `--quick` | - | Quick health check (15s) | - |
-| `--verbose` | `-v` | Show detailed per-core metrics | - |
+| `--verbose` | `-v` | Show detailed metrics | - |
+| `--all-disks` | - | Test all disks (disk stress) | First disk only |
+| `--disk-index` | - | Test specific disk by index | - |
+| `--list-disks` | - | List available disks and exit | - |
 
 ### Output Modes
 
@@ -204,10 +226,19 @@ cargo build --release
 pcheck/              # Project root
 ├── src/
 │   ├── main.rs      # CLI entry point, argument parsing
-│   ├── hw/          # Hardware detection (cpu, ram, disk, gpu)
-│   ├── stress/      # Health check (cpu, ram, disk)
+│   ├── hw/          # Hardware detection with platform modules
+│   │   ├── cpu/     # CPU detection + platform/{macos,windows,linux}.rs
+│   │   ├── gpu/     # GPU detection + platform/{macos,windows,linux}.rs
+│   │   ├── ram/     # RAM detection + platform/{macos,windows,linux}.rs
+│   │   └── disk/    # Disk detection + platform/{macos,windows,linux}.rs
+│   ├── stress/      # Health tests with platform modules
+│   │   ├── cpu/     # CPU test + platform/
+│   │   ├── ram/     # RAM test + platform/
+│   │   ├── disk/    # Disk test + smart.rs
+│   │   ├── gpu.rs   # GPU test (thermal + compute)
+│   │   └── gpu_compute.rs  # wgpu-based compute shader test
 │   ├── sensors/     # Monitoring (temp, frequency, monitor)
-│   ├── platform/    # Platform-specific code
+│   ├── platform/    # Platform detection
 │   ├── fmt.rs       # Output formatting
 │   ├── lang.rs      # Multi-language support
 │   └── prompt.rs    # Interactive prompts
@@ -222,23 +253,20 @@ pcheck/              # Project root
 
 ## Version History
 
-### v0.3.0 (Current)
-- Disk health check (read/write speed test)
-- SSD vs HDD detection
-- Multi-disk support
-- Disk type and health-specific evaluation
-
-### v0.2.0
-- Added `--verbose` flag for detailed per-core metrics
-- Visual bar charts for CPU usage
-- Temperature sensors list
-- Platform-specific output formatting
+### v0.2.0 (Current)
+- Modular platform structure (hw/*/mod.rs + platform/ subdirs)
+- GPU compute stress test (wgpu-based, optional feature flag)
+- GPU type translations ("Tích hợp"/"Integrated", "Rời"/"Discrete")
+- New CLI flags: --cpu-stress, --ram-stress, --disk-stress, --gpu-stress
+- Disk selection: --all-disks, --disk-index, --list-disks
+- Full Vietnamese translation for all result boxes
 
 ### v0.1.0
 - Initial release
 - Hardware detection (CPU, GPU, RAM, Disk)
-- Basic health check mode
+- Basic health check mode (CPU, RAM)
 - Multi-language support
+- Verbose mode with per-core metrics
 
 ---
 
