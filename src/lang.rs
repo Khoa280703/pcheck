@@ -65,13 +65,6 @@ impl Text {
         }
     }
 
-    pub fn cores(&self) -> &str {
-        match self.lang {
-            Language::Vietnamese => "nhân",
-            Language::English => "cores",
-        }
-    }
-
     pub fn ram_free(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "trống",
@@ -336,6 +329,21 @@ impl Text {
         match self.lang {
             Language::Vietnamese => "mẫu",
             Language::English => "model",
+        }
+    }
+
+    // GPU health check translations
+    pub fn gpu_health_check(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Kiểm tra GPU",
+            Language::English => "GPU Health Check",
+        }
+    }
+
+    pub fn testing_gpu(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đang kiểm tra GPU",
+            Language::English => "Testing GPU",
         }
     }
 }

@@ -1,6 +1,6 @@
 # PChecker Code Standards & Conventions
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Last Updated:** 2025-12-25
 
 ---
@@ -9,7 +9,7 @@
 
 ### Directory Organization
 ```
-pchecker/
+pcheck/                    # Project root (flattened from pcheck/pchecker/)
 ├── Cargo.toml              # Project manifest
 ├── Cargo.lock              # Dependency lock file
 ├── .gitignore              # Git ignore patterns
@@ -31,10 +31,19 @@ pchecker/
 │   ├── system-architecture.md
 │   └── project-roadmap.md
 │
+├── plans/                  # Project plans
+│   ├── active/             # Active development plans
+│   └── completed/          # Completed plans
+│
+├── reports/                # Agent reports
+│   └── *.md                # Generated agent reports
+│
 ├── examples/               # Example programs
 │   └── test_sysinfo.rs     # sysinfo capability test
 │
-└── tests/                  # Integration tests (future)
+├── ROADMAP.md              # Single roadmap file
+├── README.md               # User guide
+└── DEV_GUIDE.md            # Development commands
 ```
 
 ### Module Responsibilities

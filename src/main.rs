@@ -39,6 +39,10 @@ struct Args {
     #[arg(long)]
     disk_stress: bool,
 
+    /// Run GPU stress test only
+    #[arg(long)]
+    gpu_stress: bool,
+
     /// Test all disks (default: only first/boot disk)
     #[arg(long, conflicts_with = "disk_index")]
     all_disks: bool,
@@ -88,10 +92,11 @@ fn main() {
     let run_cpu = args.stress || args.cpu_stress;
     let run_ram = args.stress || args.ram_stress;
     let run_disk = args.stress || args.disk_stress;
-    let run_any_test = run_cpu || run_ram || run_disk;
+    let run_gpu = args.stress || args.gpu_stress;
+    let run_any_test = run_cpu || run_ram || run_disk || run_gpu;
 
     if run_any_test {
-        run_health_check_mode(duration, args.verbose, &text, run_cpu, run_ram, run_disk, args.quick, args.all_disks, args.disk_index);
+        run_health_check_mode(duration, args.verbose, &text, run_cpu, run_ram, run_disk, run_gpu, args.quick, args.all_disks, args.disk_index);
     } else {
         run_info_mode(&text);
     }
@@ -150,7 +155,7 @@ fn run_info_mode(text: &Text) {
 
     // Detect CPU
     let cpu = CpuInfo::new();
-    let cpu_display = format!("{} ({} {})", cpu.model, cpu.cores, text.cores());
+    let cpu_display = format!("{} ({} {})", cpu.model, cpu.cores, text.cores_label());
     print_section("🧠", text.cpu(), &cpu_display);
 
     // Detect GPU
@@ -209,7 +214,7 @@ fn list_disks_mode(text: &Text) {
 }
 
 /// Run health check mode (v0.3.0 feature)
-fn run_health_check_mode(duration: u64, verbose: bool, text: &Text, run_cpu: bool, run_ram: bool, run_disk: bool, quick: bool, all_disks: bool, disk_index: Option<usize>) {
+fn run_health_check_mode(duration: u64, verbose: bool, text: &Text, run_cpu: bool, run_ram: bool, run_disk: bool, run_gpu: bool, quick: bool, all_disks: bool, disk_index: Option<usize>) {
     let start_time = Instant::now();
 
     println!();
@@ -226,6 +231,7 @@ fn run_health_check_mode(duration: u64, verbose: bool, text: &Text, run_cpu: boo
     let cpu_info = CpuInfo::new();
     let ram_info = RamInfo::new();
     let disk_info_list = DiskInfo::new();
+    let gpu_info_list = GpuInfo::new();
 
     // Determine which disks to test
     let disks_to_test: Vec<(usize, crate::hw::DiskInfo)> = if all_disks {
@@ -336,6 +342,50 @@ fn run_health_check_mode(duration: u64, verbose: bool, text: &Text, run_cpu: boo
             }
             all_issues.extend(disk_issues);
             println!();
+        }
+    }
+
+    // GPU Test
+    if run_gpu {
+        if gpu_info_list.is_empty() {
+            println!("⏠️  {}", text.no_gpu());
+            println!();
+        } else {
+            for (idx, gpu_info) in gpu_info_list.iter().enumerate() {
+                if gpu_info_list.len() > 1 {
+                    println!("⏳ {} #{} (~{}s)", text.testing_gpu(), idx, duration);
+                } else {
+                    println!("⏳ {} (~{}s)", text.testing_gpu(), duration);
+                }
+                io::stdout().flush().unwrap();
+
+                let gpu_config = stress::GpuTestConfig {
+                    duration_secs: duration,
+                    verbose,
+                };
+                let gpu_result = stress::run_gpu_test(
+                    gpu_config,
+                    gpu_info.model.clone(),
+                    gpu_info.gpu_type.as_str().to_string(),
+                    gpu_info.vram_gb,
+                );
+
+                let (gpu_healthy, gpu_issues) = print_gpu_result(&gpu_result, text);
+                if !gpu_healthy {
+                    all_healthy = false;
+                    if matches!(gpu_result.health, HealthStatus::Failed(_)) {
+                        if let HealthStatus::Failed(ref msg) = gpu_result.health {
+                            if gpu_info_list.len() > 1 {
+                                critical_issues.push(format!("GPU #{} ({}): {}", idx, gpu_info.model, msg));
+                            } else {
+                                critical_issues.push(format!("GPU: {}", msg));
+                            }
+                        }
+                    }
+                }
+                all_issues.extend(gpu_issues);
+                println!();
+            }
         }
     }
 
@@ -614,6 +664,99 @@ fn print_disk_result(result: &stress::DiskTestResult, text: &Text) -> (bool, Vec
         println!("{}", table_row(text.read_speed(), &format!("{:.1} MB/s", result.read_speed_mb_s)));
         println!("{}", table_row(text.seek_time(), &format!("{:.1} ms", result.seek_time_ms)));
         println!("{}", table_row(text.bad_sectors(), &format!("{}", result.bad_sectors)));
+    }
+
+    println!("└──────────────────────────────────────────────────────────┘");
+
+    (healthy, issues)
+}
+
+fn print_gpu_result(result: &stress::GpuTestResult, text: &Text) -> (bool, Vec<String>) {
+    let (status_icon, healthy, issues) = match &result.health {
+        HealthStatus::Healthy => ("✅", true, vec![]),
+        HealthStatus::IssuesDetected(issues) => ("⚠️", false, issues.clone()),
+        HealthStatus::Failed(msg) => ("❌", false, vec![msg.clone()]),
+    };
+
+    // Calculate header padding
+    let header_text = text.gpu_health_check();
+    let header_len = header_text.chars().count();
+    let header_padding = 52 - header_len - 4; // 4 for emoji + spaces
+
+    // Format VRAM
+    let vram_str = if let Some(vram) = result.vram_gb {
+        format!("{:.0} GB", vram)
+    } else {
+        "N/A".to_string()
+    };
+
+    // Format temperature with color coding
+    // Priority: SMC temp > powermetrics temp > sysinfo temperature > SoC message > N/A
+    let temp_val = result.apple_gpu_metrics
+        .as_ref()
+        .and_then(|m| m.smc_temperature_c.or(m.temperature_c))
+        .or(result.temperature_max)
+        .or_else(|| result.temperature_end.as_ref().map(|t| t.current));
+
+    let temp_str = if let Some(temp) = temp_val {
+        format!("{:.1}°C", temp)
+    } else if result.is_apple_silicon {
+        result.apple_gpu_metrics
+            .as_ref()
+            .and_then(|m| m.thermal_pressure.as_ref().map(|p| {
+                match p {
+                    stress::gpu::ThermalPressure::Nominal => "✅ Nominal".to_string(),
+                    stress::gpu::ThermalPressure::Moderate => "⚠️ Moderate".to_string(),
+                    stress::gpu::ThermalPressure::Heavy => "❌ Heavy".to_string(),
+                    _ => "SoC (see CPU)".to_string(),
+                }
+            }))
+            .unwrap_or_else(|| "SoC (see CPU)".to_string())
+    } else {
+        "N/A".to_string()
+    };
+
+    println!("┌──────────────────────────────────────────────────────────┐");
+    println!("│ 🎮 {} {:>width$} │", header_text, status_icon, width = header_padding + 2);
+    println!("├──────────────────────────────────────────────────────────┤");
+    // Hardware info
+    println!("{}", table_row("model", &result.gpu_model));
+    println!("{}", table_row("type", &result.gpu_type));
+    println!("{}", table_row("vram", &vram_str));
+    println!("{}", table_row(text.temperature(), &temp_str));
+
+    // Apple Silicon GPU metrics (verbose mode)
+    if let Some(ref metrics) = result.apple_gpu_metrics {
+        println!("├──────────────────────────────────────────────────────────┤");
+        println!("{}", table_row("GPU freq", &metrics.frequency_mhz.map_or("N/A".to_string(), |f| format!("{} MHz", f))));
+        println!("{}", table_row("GPU power", &metrics.power_mw.map_or("N/A".to_string(), |p| format!("{} mW", p))));
+        println!("{}", table_row("GPU usage", &metrics.residency_pct.map_or("N/A".to_string(), |r| format!("{:.1}%", r))));
+        // Show GPU cores if available
+        if let Some(cores) = metrics.gpu_cores {
+            println!("{}", table_row("GPU cores", &format!("{}", cores)));
+        }
+        // Show Metal version if available
+        if let Some(ref metal) = metrics.metal_version {
+            println!("{}", table_row("Metal", metal));
+        }
+        // Show thermal pressure if available
+        if let Some(ref pressure) = metrics.thermal_pressure {
+            let pressure_str = match pressure {
+                stress::gpu::ThermalPressure::Nominal => "✅ Nominal",
+                stress::gpu::ThermalPressure::Moderate => "⚠️ Moderate",
+                stress::gpu::ThermalPressure::Heavy => "❌ Heavy",
+                stress::gpu::ThermalPressure::Trapping => "🔥 Trapping",
+                stress::gpu::ThermalPressure::Sleeping => "💤 Sleeping",
+                stress::gpu::ThermalPressure::Unknown => "?",
+            };
+            println!("{}", table_row("Thermal state", pressure_str));
+        }
+        // Show SMC temperature if different from powermetrics
+        if let Some(smc_temp) = metrics.smc_temperature_c {
+            if metrics.temperature_c.is_some() && Some(smc_temp) != metrics.temperature_c {
+                println!("{}", table_row("SMC temp", &format!("{:.1}°C", smc_temp)));
+            }
+        }
     }
 
     println!("└──────────────────────────────────────────────────────────┘");

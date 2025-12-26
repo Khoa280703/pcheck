@@ -4,7 +4,7 @@
 
 PChecker detects system hardware information and runs stress tests to identify potential hardware issues. Supports macOS (Apple Silicon), Windows, and Linux.
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Repository:** https://github.com/Khoa280703/pcheck
 **License:** MIT
 
@@ -33,6 +33,11 @@ PChecker detects system hardware information and runs stress tests to identify p
   - **Windows/Linux:** `C00: [██████████] 100% @4.5GHz` (3 cores/row)
 - **Temperature Sensors:** Detailed list (up to 8 sensors)
 - **Real-Time Updates:** Every second during stress test
+
+### Platform-Specific Features
+- **macOS:** 4 cores/row in verbose mode, frequency average only
+- **Windows:** 3 cores/row with per-core frequency
+- **Linux:** 3 cores/row with per-core frequency
 
 ### Multi-Language Support
 - Vietnamese (default)
@@ -196,22 +201,34 @@ cargo build --release
 
 ### Code Structure
 ```
-src/
-├── main.rs          # CLI entry point, argument parsing
-├── hw/              # Hardware detection (cpu, ram, disk, gpu)
-├── stress/          # Health check (cpu, ram)
-├── sensors/         # Monitoring (temp, frequency, monitor)
-├── platform/        # Platform-specific code
-├── fmt.rs           # Output formatting
-├── lang.rs          # Multi-language support
-└── prompt.rs        # Interactive prompts
+pcheck/              # Project root
+├── src/
+│   ├── main.rs      # CLI entry point, argument parsing
+│   ├── hw/          # Hardware detection (cpu, ram, disk, gpu)
+│   ├── stress/      # Health check (cpu, ram, disk)
+│   ├── sensors/     # Monitoring (temp, frequency, monitor)
+│   ├── platform/    # Platform-specific code
+│   ├── fmt.rs       # Output formatting
+│   ├── lang.rs      # Multi-language support
+│   └── prompt.rs    # Interactive prompts
+├── docs/            # Documentation
+├── plans/           # Project plans (active/, completed/)
+├── reports/         # Agent reports
+├── ROADMAP.md       # Single roadmap file
+└── Cargo.toml       # Project manifest
 ```
 
 ---
 
 ## Version History
 
-### v0.2.0 (Current)
+### v0.3.0 (Current)
+- Disk health check (read/write speed test)
+- SSD vs HDD detection
+- Multi-disk support
+- Disk type and health-specific evaluation
+
+### v0.2.0
 - Added `--verbose` flag for detailed per-core metrics
 - Visual bar charts for CPU usage
 - Temperature sensors list

@@ -1,11 +1,11 @@
 # PChecker Project Roadmap
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Last Updated:** 2025-12-25
 
 ---
 
-## Current Status: v0.2.0 (Stable)
+## Current Status: v0.3.0 (Stable)
 
 **Release Date:** 2025-12-25
 **Status:** Active Development
@@ -14,10 +14,12 @@
 - [x] Hardware detection (CPU, GPU, RAM, Disk)
 - [x] CPU stress test with prime calculation
 - [x] RAM stress test with write/read verify
+- [x] **Disk stress test with read/write speed check** (NEW in v0.3.0)
+- [x] **SSD vs HDD detection** (NEW in v0.3.0)
 - [x] Temperature monitoring
 - [x] Frequency tracking and throttling detection
-- [x] **Verbose mode with per-core metrics** (NEW in v0.2.0)
-- [x] **Visual bar charts for CPU usage** (NEW in v0.2.0)
+- [x] Verbose mode with per-core metrics (v0.2.0)
+- [x] Visual bar charts for CPU usage (v0.2.0)
 - [x] **Platform-specific output formatting** (NEW in v0.2.0)
 - [x] **Temperature sensors list** (NEW in v0.2.0)
 - [x] Multi-language support (Vietnamese, English)

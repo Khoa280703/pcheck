@@ -1,6 +1,6 @@
 # PChecker Project Overview & PDR
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Last Updated:** 2025-12-25
 **Status:** Active Development
 
@@ -226,28 +226,44 @@ The system shall support:
 
 ### Module Structure
 ```
-src/
-├── main.rs           # CLI entry point, orchestration
-├── hw/               # Hardware detection modules
-│   ├── mod.rs        # Module exports
-│   ├── cpu.rs        # CPU model & core detection
-│   ├── ram.rs        # RAM total/used memory detection
-│   ├── disk.rs       # Disk storage detection
-│   └── gpu.rs        # GPU detection (platform-specific)
-├── stress/           # Health check modules
-│   ├── mod.rs        # Health status enum, exports
-│   ├── cpu.rs        # CPU stress test (prime calculation)
-│   └── ram.rs        # RAM stress test (write/read verify)
-├── sensors/          # Hardware monitoring
-│   ├── mod.rs        # Sensor module exports
-│   ├── temp.rs       # CPU temperature reading
-│   ├── frequency.rs  # CPU frequency per-core & average
-│   └── monitor.rs    # Background CPU usage monitor thread
-├── platform/
-│   └── mod.rs        # Platform detection (macOS/Windows/Linux)
-├── fmt.rs            # Output formatting, ANSI colors, progress bars
-├── lang.rs           # Multi-language support (Vietnamese/English)
-└── prompt.rs         # Interactive language selection (placeholder)
+pcheck/                    # Project root
+├── src/
+│   ├── main.rs           # CLI entry point, orchestration
+│   ├── hw/               # Hardware detection modules
+│   │   ├── mod.rs        # Module exports
+│   │   ├── cpu.rs        # CPU model & core detection
+│   │   ├── ram.rs        # RAM total/used memory detection
+│   │   ├── disk.rs       # Disk storage detection
+│   │   └── gpu.rs        # GPU detection (platform-specific)
+│   ├── stress/           # Health check modules
+│   │   ├── mod.rs        # Health status enum, exports
+│   │   ├── cpu.rs        # CPU stress test (prime calculation)
+│   │   ├── ram.rs        # RAM stress test (write/read verify)
+│   │   └── disk.rs       # Disk stress test (read/write speed)
+│   ├── sensors/          # Hardware monitoring
+│   │   ├── mod.rs        # Sensor module exports
+│   │   ├── temp.rs       # CPU temperature reading
+│   │   ├── frequency.rs  # CPU frequency per-core & average
+│   │   └── monitor.rs    # Background CPU usage monitor thread
+│   ├── platform/
+│   │   └── mod.rs        # Platform detection (macOS/Windows/Linux)
+│   ├── fmt.rs            # Output formatting, ANSI colors, progress bars
+│   ├── lang.rs           # Multi-language support (Vietnamese/English)
+│   └── prompt.rs         # Interactive language selection (placeholder)
+├── docs/                 # Project documentation
+│   ├── project-overview-pdr.md
+│   ├── code-standards.md
+│   ├── codebase-summary.md
+│   ├── system-architecture.md
+│   └── project-roadmap.md
+├── plans/                # Project plans
+│   ├── active/           # Active plans
+│   └── completed/        # Completed plans
+├── reports/              # Agent reports
+├── ROADMAP.md            # Single roadmap file
+├── README.md             # User guide
+├── DEV_GUIDE.md          # Development commands
+└── Cargo.toml            # Project manifest
 ```
 
 ### Design Patterns
@@ -279,10 +295,11 @@ Formatted Output (Tables, Progress Bars, Color Codes)
 
 ## Current Status & Features
 
-### Implemented (v0.2.0)
+### Implemented (v0.3.0)
 - [x] Hardware detection (CPU, GPU, RAM, Disk)
 - [x] CPU stress test with prime calculation
 - [x] RAM stress test with write/read verify
+- [x] Disk stress test with read/write speed check
 - [x] Temperature monitoring
 - [x] Frequency tracking and throttling detection
 - [x] Verbose mode with per-core metrics
@@ -295,21 +312,19 @@ Formatted Output (Tables, Progress Bars, Color Codes)
 - Temperature reading may fail on some systems (no fallback)
 - Language selection is interactive only (no `--lang` flag)
 - No integration tests for full workflow
-- Disk health check not implemented
 - GPU stress testing not implemented
 
 ---
 
 ## Future Roadmap
 
-### v0.3.0 (Planned)
+### v0.4.0 (Planned)
 - [ ] GPU stress testing
-- [ ] Disk health check (read/write tests)
 - [ ] Command-line language selection (`--lang` flag)
 - [ ] JSON output mode for automation
 - [ ] Config file support
 
-### v0.4.0 (Planned)
+### v0.5.0 (Planned)
 - [ ] VRAM detection for Windows/Linux
 - [ ] Battery health check (laptops)
 - [ ] Network interface detection

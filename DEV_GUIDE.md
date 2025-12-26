@@ -87,11 +87,11 @@ cargo run
 
 ```bash
 # For this project
-alias pcbuild='cd ~/development/pcheck/pchecker && cargo build --release'
-alias pctest='cd ~/development/pcheck/pchecker && cargo test'
-alias pcrun='cd ~/development/pcheck/pchecker && ./target/release/pchecker'
-alias pcclean='cd ~/development/pcheck/pchecker && cargo clean'
-alias pc-rebuild='cd ~/development/pcheck/pchecker && cargo clean && cargo build --release'
+alias pcbuild='cd ~/development/pcheck && cargo build --release'
+alias pctest='cd ~/development/pcheck && cargo test'
+alias pcrun='cd ~/development/pcheck && ./target/release/pchecker'
+alias pcclean='cd ~/development/pcheck && cargo clean'
+alias pc-rebuild='cd ~/development/pcheck && cargo clean && cargo build --release'
 ```
 
 ## Language Selection (auto-prompt)
@@ -123,3 +123,4 @@ When running, select:
 | Test fails | Check specific test with `cargo test <name>` |
 | SSD detection wrong | Check platform-specific code in `src/stress/disk.rs` |
 | Temperature N/A | Check `src/sensors/temp.rs` for platform support |
+| Wrong project path | Project root is `pcheck/`, not `pcheck/pchecker/` |

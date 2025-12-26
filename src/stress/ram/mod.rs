@@ -48,7 +48,7 @@ pub fn run_stress_test(config: RamTestConfig, ram_total_gb: f64) -> RamTestResul
     // Limit to max 16GB to prevent OOM on systems with lots of RAM
     let test_gb = test_gb.min(16.0);
 
-    print!("⏳ Đang kiểm tra RAM... Đang cấp phát {:.1} GB...", test_gb);
+    print!("⏳ Checking RAM... Allocating {:.1} GB...", test_gb);
     io::stdout().flush().unwrap();
 
     // Allocate buffer
@@ -58,7 +58,7 @@ pub fn run_stress_test(config: RamTestConfig, ram_total_gb: f64) -> RamTestResul
     let _start = Instant::now();
 
     // Write test: fill buffer with pattern
-    print!("\r⏳ Đang kiểm tra RAM... Đang ghi dữ liệu...");
+    print!("\r⏳ Checking RAM... Writing data...");
     io::stdout().flush().unwrap();
 
     let write_start = Instant::now();
@@ -73,7 +73,7 @@ pub fn run_stress_test(config: RamTestConfig, ram_total_gb: f64) -> RamTestResul
         // Show progress every 100 chunks
         if (i + 1) % 100 == 0 || i + 1 == total_chunks {
             let progress = ((i + 1) * 100 / total_chunks) as u8;
-            print!("\r⏳ Đang kiểm tra RAM... Đang ghi dữ liệu... {}%", progress);
+            print!("\r⏳ Checking RAM... Writing data... {}%", progress);
             io::stdout().flush().unwrap();
         }
     }
@@ -86,7 +86,7 @@ pub fn run_stress_test(config: RamTestConfig, ram_total_gb: f64) -> RamTestResul
     };
 
     // Read + verify test
-    print!("\r⏳ Đang kiểm tra RAM... Đang xác thực dữ liệu...");
+    print!("\r⏳ Checking RAM... Verifying data...");
     io::stdout().flush().unwrap();
 
     let mut errors = 0u64;

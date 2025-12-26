@@ -1,8 +1,8 @@
 # PChecker Codebase Summary
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Last Updated:** 2025-12-25
-**Total Lines:** ~1,980 lines of Rust code
+**Total Lines:** ~2,500 lines of Rust code
 
 ---
 
@@ -15,33 +15,54 @@ PChecker is a cross-platform hardware detection and health check CLI tool writte
 ## File Structure
 
 ```
-src/
-├── main.rs                   (334 lines) - CLI entry point, orchestration
+pcheck/                    # Project root
+├── src/
+│   ├── main.rs                   (334 lines) - CLI entry point, orchestration
+│   │
+│   ├── hw/                       - Hardware detection modules
+│   │   ├── mod.rs                (40 lines) - Module exports
+│   │   ├── cpu.rs                (50 lines) - CPU model & core detection
+│   │   ├── ram.rs                (40 lines) - RAM total/used/free detection
+│   │   ├── disk.rs               (45 lines) - Disk name & capacity detection
+│   │   └── gpu.rs                (120 lines) - GPU detection (platform-specific)
+│   │
+│   ├── stress/                   - Health check modules
+│   │   ├── mod.rs                (60 lines) - HealthStatus enum, test runners
+│   │   ├── cpu.rs                (520 lines) - CPU stress test (with verbose mode)
+│   │   ├── ram.rs                (205 lines) - RAM stress test (write/read verify)
+│   │   └── disk.rs               (180 lines) - Disk stress test (read/write speed)
+│   │
+│   ├── sensors/                  - Hardware monitoring
+│   │   ├── mod.rs                (30 lines) - Sensor exports
+│   │   ├── temp.rs               (100 lines) - CPU temperature reading
+│   │   ├── frequency.rs          (70 lines) - CPU frequency per-core & average
+│   │   └── monitor.rs            (90 lines) - Background CPU usage monitor
+│   │
+│   ├── platform/
+│   │   └── mod.rs                (25 lines) - Platform detection (macOS/Windows/Linux)
+│   │
+│   ├── fmt.rs                    (200 lines) - Output formatting, ANSI colors, progress bars
+│   ├── lang.rs                   (120 lines) - Multi-language support (Vietnamese/English)
+│   └── prompt.rs                 (30 lines) - Interactive prompts
 │
-├── hw/                       - Hardware detection modules
-│   ├── mod.rs                (40 lines) - Module exports
-│   ├── cpu.rs                (50 lines) - CPU model & core detection
-│   ├── ram.rs                (40 lines) - RAM total/used/free detection
-│   ├── disk.rs               (45 lines) - Disk name & capacity detection
-│   └── gpu.rs                (120 lines) - GPU detection (platform-specific)
+├── docs/                         - Project documentation
+│   ├── project-overview-pdr.md   - Product overview & requirements
+│   ├── code-standards.md         - Code structure & conventions
+│   ├── codebase-summary.md       - This file
+│   ├── system-architecture.md    - Architecture documentation
+│   └── project-roadmap.md        - Development roadmap
 │
-├── stress/                   - Health check modules
-│   ├── mod.rs                (60 lines) - HealthStatus enum, test runners
-│   ├── cpu.rs                (520 lines) - CPU stress test (with verbose mode)
-│   └── ram.rs                (205 lines) - RAM stress test (write/read verify)
+├── plans/                        - Project plans
+│   ├── active/                   - Active development plans
+│   └── completed/                - Completed plans
 │
-├── sensors/                  - Hardware monitoring
-│   ├── mod.rs                (30 lines) - Sensor exports
-│   ├── temp.rs               (100 lines) - CPU temperature reading
-│   ├── frequency.rs          (70 lines) - CPU frequency per-core & average
-│   └── monitor.rs            (90 lines) - Background CPU usage monitor
+├── reports/                      - Agent reports
+│   └── *.md                      - Generated reports
 │
-├── platform/
-│   └── mod.rs                (25 lines) - Platform detection (macOS/Windows/Linux)
-│
-├── fmt.rs                    (200 lines) - Output formatting, ANSI colors, progress bars
-├── lang.rs                   (120 lines) - Multi-language support (Vietnamese/English)
-└── prompt.rs                 (30 lines) - Interactive prompts
+├── ROADMAP.md                    - Single roadmap file
+├── README.md                     - User guide
+├── DEV_GUIDE.md                  - Development commands
+└── Cargo.toml                    - Project manifest
 ```
 
 ---
