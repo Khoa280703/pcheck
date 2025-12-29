@@ -125,7 +125,7 @@ pub fn run_stress_test(config: CpuTestConfig, cpu_model: String, cpu_cores: usiz
         // Main line + per-core rows + sensor section (max 4 sensors + 1 header + 1 blank)
         let freq = get_cpu_frequency();
         use platform::cores_per_row_verbose;
-        let core_rows = (freq.cores + cores_per_row_verbose() - 1) / cores_per_row_verbose();
+        let core_rows = freq.cores.div_ceil(cores_per_row_verbose());
         1 + core_rows + 6 // +6 for sensor section (blank + header + max 4 sensors)
     } else {
         1 // Normal mode: only 1 line
@@ -259,7 +259,7 @@ fn print_cpu_progress_box(
         }
 
         // Sensor list section (update every 5 seconds to avoid flicker)
-        if elapsed % 5 == 0 || elapsed == total {
+        if elapsed.is_multiple_of(5) || elapsed == total {
             let sensors = get_all_sensors();
             if !sensors.is_empty() {
                 println!();
@@ -413,10 +413,10 @@ fn calculate_primes(n: usize) -> usize {
 fn is_prime(n: usize) -> bool {
     if n < 2 { return false; }
     if n == 2 { return true; }
-    if n % 2 == 0 { return false; }
+    if n.is_multiple_of(2) { return false; }
     let sqrt = (n as f64).sqrt() as usize;
     for i in (3..=sqrt).step_by(2) {
-        if n % i == 0 { return false; }
+        if n.is_multiple_of(i) { return false; }
     }
     true
 }

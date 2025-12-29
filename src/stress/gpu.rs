@@ -57,7 +57,7 @@ pub fn get_gpu_temp() -> Option<GpuTemp> {
         let temp = comp.temperature()?;
 
         // Filter out invalid readings
-        if temp < -1000.0 || temp > 150.0 {
+        if !(-1000.0..=150.0).contains(&temp) {
             continue;
         }
 

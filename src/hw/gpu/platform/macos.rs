@@ -34,7 +34,7 @@ pub fn detect_gpus() -> Vec<GpuInfo> {
                     .lines()
                     .find(|l| l.contains("VRAM"))
                     .and_then(|l| l.split(':').nth(1))
-                    .and_then(|s| s.trim().split_whitespace().next())
+                    .and_then(|s| s.split_whitespace().next())
                     .and_then(|s| s.parse::<f64>().ok())
             };
 

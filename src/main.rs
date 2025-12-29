@@ -66,6 +66,10 @@ struct Args {
     /// Verbose output (show detailed per-core metrics and SMART data)
     #[arg(short, long)]
     verbose: bool,
+
+    /// Run torture test (all components simultaneously - PSU & thermal stress test)
+    #[arg(short = 'T', long)]
+    torture: bool,
 }
 
 fn main() {
@@ -78,6 +82,12 @@ fn main() {
     // Handle --list-disks
     if args.list_disks {
         list_disks_mode(&text);
+        return;
+    }
+
+    // Handle --torture (takes precedence over other stress modes)
+    if args.torture {
+        run_torture_mode(args.duration, args.verbose, &text);
         return;
     }
 
@@ -100,6 +110,17 @@ fn main() {
     } else {
         run_info_mode(&text);
     }
+}
+
+/// Run torture test mode (all components simultaneously)
+fn run_torture_mode(duration: u64, _verbose: bool, text: &Text) {
+    let config = stress::torture::TortureConfig {
+        duration_secs: duration,
+        _verbose: false,
+        language: text.lang,
+    };
+
+    let _result = stress::torture::run_torture_test(config);
 }
 
 /// Standalone language selection
@@ -482,7 +503,7 @@ fn format_number(n: u64) -> String {
     let chars: Vec<char> = s.chars().collect();
     let mut result = String::new();
     for (i, c) in chars.iter().enumerate() {
-        if i > 0 && (chars.len() - i) % 3 == 0 {
+        if i > 0 && (chars.len() - i).is_multiple_of(3) {
             result.push(',');
         }
         result.push(*c);

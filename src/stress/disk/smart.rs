@@ -109,7 +109,7 @@ fn get_macos_smart_data(mount_point: &str, verbose: bool) -> SmartData {
 
     // Get disk info using diskutil (no sudo needed for basic info)
     if let Ok(output) = Command::new("diskutil")
-        .args(&["info", "-plist", &disk_identifier])
+        .args(["info", "-plist", &disk_identifier])
         .output()
     {
         let plist = String::from_utf8_lossy(&output.stdout);
@@ -123,7 +123,7 @@ fn get_macos_smart_data(mount_point: &str, verbose: bool) -> SmartData {
         let rdisk = disk_identifier.replace("disk", "rdisk");
         if let Ok(output) = Command::new("sh")
             .arg("-c")
-            .arg(&format!("sudo smartctl -a /dev/{} 2>/dev/null || smartctl -a /dev/{} 2>/dev/null", rdisk, rdisk))
+            .arg(format!("sudo smartctl -a /dev/{} 2>/dev/null || smartctl -a /dev/{} 2>/dev/null", rdisk, rdisk))
             .output()
         {
             let smartctl = String::from_utf8_lossy(&output.stdout);
@@ -135,7 +135,7 @@ fn get_macos_smart_data(mount_point: &str, verbose: bool) -> SmartData {
         // Fallback: try diskutil info with more details
         if result.model.is_none() {
             if let Ok(output) = Command::new("diskutil")
-                .args(&["info", &disk_identifier])
+                .args(["info", &disk_identifier])
                 .output()
             {
                 let info = String::from_utf8_lossy(&output.stdout);
@@ -146,7 +146,7 @@ fn get_macos_smart_data(mount_point: &str, verbose: bool) -> SmartData {
         // Try ioreg for temperature (may work without sudo)
         if result.temperature_c.is_none() {
             if let Ok(output) = Command::new("ioreg")
-                .args(&["-rn", "AppleARMIODevice"])
+                .args(["-rn", "AppleARMIODevice"])
                 .output()
             {
                 let ioreg = String::from_utf8_lossy(&output.stdout);
@@ -184,8 +184,8 @@ fn parse_diskutil_info(plist: &str, result: &mut SmartData) {
         let line = line.trim();
 
         // Check for SMART status
-        if line.contains("<key>SMARTStatus</key>") {
-            if i + 1 < lines.len() {
+        if line.contains("<key>SMARTStatus</key>")
+            && i + 1 < lines.len() {
                 let next_line = lines[i + 1].trim();
                 if next_line.contains("Verified") || next_line.contains("true") {
                     result.status = SmartStatus::Verified;
@@ -193,7 +193,6 @@ fn parse_diskutil_info(plist: &str, result: &mut SmartData) {
                     result.status = SmartStatus::Failing;
                 }
             }
-        }
     }
 }
 

@@ -386,7 +386,7 @@ fn check_macos_ssd(mount: &PathBuf) -> bool {
             let stdout = String::from_utf8_lossy(&out.stdout);
             stdout.lines()
                 .nth(1)
-                .and_then(|line| line.split_whitespace().nth(0))
+                .and_then(|line| line.split_whitespace().next())
                 .unwrap_or("disk0")
                 .to_string()
         }
@@ -395,7 +395,7 @@ fn check_macos_ssd(mount: &PathBuf) -> bool {
 
     // Use diskutil to check if solid state
     let output = Command::new("diskutil")
-        .args(&["info", "-plist", &disk_identifier])
+        .args(["info", "-plist", &disk_identifier])
         .output();
 
     match output {

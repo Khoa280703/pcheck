@@ -17,7 +17,7 @@ struct AppleGpuInfo {
 /// Returns None if not available or command fails
 pub fn get_apple_gpu_metrics() -> Option<AppleGpuMetrics> {
     let output = Command::new("powermetrics")
-        .args(&["--samplers", "gpu_power,thermal", "-i", "1000", "-n", "1"])
+        .args(["--samplers", "gpu_power,thermal", "-i", "1000", "-n", "1"])
         .output();
 
     let content = match output {
@@ -113,7 +113,7 @@ pub fn get_apple_gpu_metrics() -> Option<AppleGpuMetrics> {
 /// No sudo required
 fn get_apple_gpu_info() -> Result<AppleGpuInfo, String> {
     let output = Command::new("system_profiler")
-        .args(&["SPDisplaysDataType"])
+        .args(["SPDisplaysDataType"])
         .output();
 
     let content = match output {

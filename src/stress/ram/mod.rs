@@ -7,17 +7,11 @@ use sysinfo::System;
 
 use super::HealthStatus;
 
+#[derive(Default)]
 pub struct RamTestConfig {
     pub max_gb: Option<f64>,
 }
 
-impl Default for RamTestConfig {
-    fn default() -> Self {
-        Self {
-            max_gb: None,
-        }
-    }
-}
 
 pub struct RamTestResult {
     // Hardware info
@@ -64,7 +58,7 @@ pub fn run_stress_test(config: RamTestConfig, ram_total_gb: f64) -> RamTestResul
     let write_start = Instant::now();
     let pattern = 0xAA55_AA55_AA55_AA55_u64;
     let chunk_size = 1024 * 1024;
-    let total_chunks = (element_count + chunk_size - 1) / chunk_size;
+    let total_chunks = element_count.div_ceil(chunk_size);
 
     for (i, chunk) in buffer.chunks_mut(chunk_size).enumerate() {
         for val in chunk.iter_mut() {

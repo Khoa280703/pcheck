@@ -54,7 +54,7 @@ pub fn get_cpu_temp() -> Option<CpuTemp> {
         let temp = comp.temperature()?;
 
         // Filter out invalid readings (negative temps on Apple Silicon)
-        if temp < -1000.0 || temp > 150.0 {
+        if !(-1000.0..=150.0).contains(&temp) {
             continue;
         }
 

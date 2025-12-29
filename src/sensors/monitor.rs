@@ -56,7 +56,7 @@ impl CpuMonitorHandle {
                 monitor.per_core_usage.insert(i, usage);
                 total += usage;
             }
-            monitor.total_usage = if sys.cpus().len() > 0 {
+            monitor.total_usage = if !sys.cpus().is_empty() {
                 total / sys.cpus().len() as f32
             } else {
                 0.0
@@ -85,7 +85,7 @@ impl CpuMonitorHandle {
                         monitor.per_core_usage.insert(i, usage);
                         total += usage;
                     }
-                    monitor.total_usage = if sys.cpus().len() > 0 {
+                    monitor.total_usage = if !sys.cpus().is_empty() {
                         total / sys.cpus().len() as f32
                     } else {
                         0.0
