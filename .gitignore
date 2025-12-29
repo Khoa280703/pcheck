@@ -43,3 +43,9 @@ Thumbs.db
 # Backup files
 *.bak
 *.backup
+
+# Documentation and plans (local development only)
+docs/
+plans/
+*.md
+!README.md
