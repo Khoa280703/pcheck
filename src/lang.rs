@@ -564,4 +564,190 @@ impl Text {
             other => other.to_string(),
         }
     }
+
+    // Torture test translations
+    pub fn torture_test(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "KIỂM TRA ĐỐT LÒ (TORTURE TEST)",
+            Language::English => "TORTURE TEST (System Stress)",
+        }
+    }
+
+    pub fn torture_warning(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đây là bài test cường độ cao. Hệ thống sẽ bị đẩy tới giới hạn.",
+            Language::English => "This is a high-intensity test. Your system will be pushed to its limits.",
+        }
+    }
+
+    pub fn torture_warning_psu(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Máy có thể tắt đột ngột nếu nguồn (PSU) yếu",
+            Language::English => "System may shut down if power supply (PSU) is weak",
+        }
+    }
+
+    pub fn torture_warning_thermal(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Nhiệt độ sẽ tăng cao, quát sẽ chạy rất mạnh",
+            Language::English => "Temperatures will rise, fans will run at maximum speed",
+        }
+    }
+
+    pub fn torture_warning_fans(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Quát kêu to là BÌNH THƯỜNG trong bài test này",
+            Language::English => "Loud fans are NORMAL during this test",
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn duration(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Thời lượng",
+            Language::English => "Duration",
+        }
+    }
+
+    pub fn seconds(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "giây",
+            Language::English => "seconds",
+        }
+    }
+
+    pub fn torture_cancel_info(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Nhấn Ctrl+C để hủy",
+            Language::English => "Press Ctrl+C to cancel",
+        }
+    }
+
+    pub fn torture_confirm(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Tiếp tục?",
+            Language::English => "Continue?",
+        }
+    }
+
+    pub fn torture_cancelled(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đã hủy bài test",
+            Language::English => "Test cancelled",
+        }
+    }
+
+    pub fn torture_starting(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đang bắt đầu",
+            Language::English => "Starting",
+        }
+    }
+
+    pub fn torture_summary(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "TÓM TẮT BÀI TEST ĐỐT LÒ",
+            Language::English => "TORTURE TEST SUMMARY",
+        }
+    }
+
+    pub fn torture_duration(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Thời gian chạy",
+            Language::English => "Duration",
+        }
+    }
+
+    pub fn torture_passed(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "HỆ THỐNG ĐÃ VƯỢT QUA BÀI TEST ĐỐT LÒ! Máy ổn định.",
+            Language::English => "SYSTEM SURVIVED THE TORTURE TEST! Hardware is stable.",
+        }
+    }
+
+    pub fn torture_failed(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "HỆ THỐNG CÓ VẤN ĐỀ. Xem chi tiết bên trên.",
+            Language::English => "SYSTEM HAS ISSUES. See details above.",
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn torture_dashboard_warning(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "QUÁT SẼ KÊU RẤT TO - ĐÂY LÀ BÌNH THƯỜNG",
+            Language::English => "LOUD FANS ARE NORMAL DURING THIS TEST",
+        }
+    }
+
+    // Dashboard labels for all components
+    pub fn torture_cpu(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "CPU",
+            Language::English => "CPU",
+        }
+    }
+
+    pub fn torture_gpu(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "GPU",
+            Language::English => "GPU",
+        }
+    }
+
+    pub fn torture_ram(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "RAM",
+            Language::English => "RAM",
+        }
+    }
+
+    pub fn torture_disk(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Ổ cứng",
+            Language::English => "Disk",
+        }
+    }
+
+    pub fn torture_load(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "tải",
+            Language::English => "load",
+        }
+    }
+
+    pub fn torture_errors(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "lỗi",
+            Language::English => "errors",
+        }
+    }
+
+    pub fn torture_write(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "ghi",
+            Language::English => "write",
+        }
+    }
+
+    pub fn torture_read(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "đọc",
+            Language::English => "read",
+        }
+    }
+
+    pub fn torture_mb_s(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "MB/s",
+            Language::English => "MB/s",
+        }
+    }
+
+    pub fn torture_na(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "N/A",
+            Language::English => "N/A",
+        }
+    }
 }
