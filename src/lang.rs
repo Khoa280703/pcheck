@@ -7,6 +7,7 @@ pub enum Language {
 }
 
 // Text translations
+#[derive(Clone)]
 pub struct Text {
     pub lang: Language,
 }
@@ -846,6 +847,445 @@ impl Text {
         match self.lang {
             Language::Vietnamese => "Thất bại. Cần kiểm tra ngay.",
             Language::English => "Test failed. Immediate attention needed.",
+        }
+    }
+
+    // ========== Temperature Status ==========
+    pub fn temp_status_excellent(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Rất tốt",
+            Language::English => "Very good",
+        }
+    }
+
+    pub fn temp_status_stable(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Ổn định",
+            Language::English => "Stable",
+        }
+    }
+
+    pub fn temp_status_warm(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Ấm",
+            Language::English => "Warm",
+        }
+    }
+
+    pub fn temp_status_hot(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Nóng",
+            Language::English => "Hot",
+        }
+    }
+
+    // ========== Number Suffixes ==========
+    pub fn billion_suffix(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Tỷ",
+            Language::English => "Billion",
+        }
+    }
+
+    pub fn million_suffix(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Triệu",
+            Language::English => "Million",
+        }
+    }
+
+    // ========== Language Selection ==========
+    pub fn language_select_prompt(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Chọn ngôn ngữ / Select language:",
+            Language::English => "Select language",
+        }
+    }
+
+    pub fn language_option_vi(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Tiếng Việt",
+            Language::English => "Vietnamese",
+        }
+    }
+
+    pub fn language_option_en(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "English",
+            Language::English => "English",
+        }
+    }
+
+    pub fn language_choice_prompt(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Lựa chọn của bạn [1-2]: ",
+            Language::English => "Your choice [1-2]: ",
+        }
+    }
+
+    pub fn language_invalid_choice(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "⚠️  Lựa chọn không hợp lệ. Vui lòng chọn 1 hoặc 2.",
+            Language::English => "⚠️  Invalid choice. Please select 1 or 2.",
+        }
+    }
+
+    // ========== Progress Messages ==========
+    pub fn progress_allocating(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đang cấp phát...",
+            Language::English => "Allocating...",
+        }
+    }
+
+    pub fn progress_writing(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đang ghi...",
+            Language::English => "Writing...",
+        }
+    }
+
+    pub fn progress_reading(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đang đọc...",
+            Language::English => "Reading...",
+        }
+    }
+
+    pub fn progress_verifying(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đang xác minh...",
+            Language::English => "Verifying...",
+        }
+    }
+
+    pub fn progress_complete(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Hoàn thành",
+            Language::English => "Complete",
+        }
+    }
+
+    // ========== Status Messages ==========
+    pub fn status_ok(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "OK",
+            Language::English => "OK",
+        }
+    }
+
+    pub fn status_ok_no_temp(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "OK (không có dữ liệu nhiệt độ)",
+            Language::English => "OK (no temp data)",
+        }
+    }
+
+    // ========== GPU Specific ==========
+    pub fn gpu_compute_unavailable(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "GPU compute không khả dụng",
+            Language::English => "GPU compute unavailable",
+        }
+    }
+
+    pub fn gpu_fallback_thermal(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Dự phòng: theo dõi nhiệt độ...",
+            Language::English => "Falling back to thermal monitoring...",
+        }
+    }
+
+    pub fn gpu_soc_needs_sudo(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "SoC (cần sudo)",
+            Language::English => "SoC (needs sudo)",
+        }
+    }
+
+    pub fn gpu_no_sensor(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "N/A (không có cảm biến)",
+            Language::English => "N/A (no sensor)",
+        }
+    }
+
+    // ========== Health Evaluation - CPU ==========
+    pub fn cpu_crashed(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "CPU bị treo trong bài test - PHẦN CỨNG LỖI",
+            Language::English => "CPU crashed during test - FAULTY HARDWARE",
+        }
+    }
+
+    pub fn cpu_overheating(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "CPU quá nhiệt ({:.1}°C) - thất bại hệ thống tản nhiệt",
+            Language::English => "CPU overheating ({:.1}°C) - cooling system failure",
+        }
+    }
+
+    pub fn cpu_running_hot(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "CPU đang chạy nóng ({:.1}°C) - kiểm tra tản nhiệt",
+            Language::English => "CPU running hot ({:.1}°C) - check cooling",
+        }
+    }
+
+    pub fn cpu_throttled(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "CPU bị giới hạn {:.1}% - có thể do nhiệt hoặc công suất",
+            Language::English => "CPU throttled by {:.1}% - possible thermal or power limit",
+        }
+    }
+
+    pub fn cpu_extreme_instability(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Phát hiện độ không ổn định cực cao (variance: {:.1}%) - có thể lỗi CPU",
+            Language::English => "Extreme instability detected (variance: {:.1}%) - possible CPU fault",
+        }
+    }
+
+    // ========== Health Evaluation - RAM ==========
+    pub fn ram_errors_detected(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Phát hiện lỗi bộ nhớ ({} lỗi) - RAM HỎNG",
+            Language::English => "Memory errors detected ({} errors) - BAD RAM",
+        }
+    }
+
+    pub fn ram_allocation_failed(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Không thể cấp phát bộ nhớ",
+            Language::English => "Memory allocation failed",
+        }
+    }
+
+    pub fn ram_low_write_speed(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Tốc độ ghi quá chậm ({:.1} GB/s) - RAM hỏng hoặc sai khe",
+            Language::English => "Extremely low write speed ({:.1} GB/s) - faulty RAM or wrong slot",
+        }
+    }
+
+    pub fn ram_low_read_speed(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Tốc độ đọc quá chậm ({:.1} GB/s) - RAM hỏng hoặc sai khe",
+            Language::English => "Extremely low read speed ({:.1} GB/s) - faulty RAM or wrong slot",
+        }
+    }
+
+    // ========== Health Evaluation - Disk ==========
+    pub fn disk_write_permission_error(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Không thể ghi đĩa - kiểm tra quyền hoặc dung lượng đĩa",
+            Language::English => "Cannot write to disk - check permissions or disk space",
+        }
+    }
+
+    pub fn disk_read_failure(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Bài test đọc thất bại - có thể lỗi đĩa",
+            Language::English => "Read test failed - possible disk failure",
+        }
+    }
+
+    pub fn disk_bad_sectors(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Phát hiện bad sector ({} sectors) - đĩa sắp hỏng",
+            Language::English => "Bad sectors detected ({} sectors) - disk failure imminent",
+        }
+    }
+
+    pub fn disk_slow_read(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Tốc độ đọc quá chậm ({:.1} MB/s) - đĩa sắp hỏng",
+            Language::English => "Extremely slow read speed ({:.1} MB/s) - dying disk",
+        }
+    }
+
+    pub fn disk_slow_write(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Tốc độ ghi quá chậm ({:.1} MB/s) - đĩa sắp hỏng",
+            Language::English => "Extremely slow write speed ({:.1} MB/s) - dying disk",
+        }
+    }
+
+    pub fn disk_slow_seek(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Thời gian seek chậm ({:.1}ms) - có thể vấn đề cơ học",
+            Language::English => "Slow seek time ({:.1}ms) - possible mechanical issue",
+        }
+    }
+
+    pub fn disk_ssd_slow(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Tốc độ SSD đọc dưới trung bình ({:.1} MB/s)",
+            Language::English => "SSD read speed below average ({:.1} MB/s)",
+        }
+    }
+
+    pub fn disk_hdd_slow(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Tốc độ HDD đọc dưới trung bình ({:.1} MB/s)",
+            Language::English => "HDD read speed below average ({:.1} MB/s)",
+        }
+    }
+
+    // ========== AI Commentary ==========
+    pub fn ai_cpu_temp_hot(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Nhiệt độ CPU {:.0}°C - đang chạy khá nóng",
+            Language::English => "CPU temperature at {:.0}°C - running hot",
+        }
+    }
+
+    pub fn ai_cpu_temp_warming(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Nhiệt độ CPU {:.0}°C - đang ấm dần lên",
+            Language::English => "CPU temperature at {:.0}°C - warming up nicely",
+        }
+    }
+
+    pub fn ai_ram_speed_excellent(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Tốc độ ghi RAM: {:.1} GB/s - xuất sắc",
+            Language::English => "RAM write speed: {:.1} GB/s - excellent",
+        }
+    }
+
+    pub fn ai_ram_speed_good(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Tốc độ ghi RAM: {:.1} GB/s - tốt",
+            Language::English => "RAM write speed: {:.1} GB/s - good",
+        }
+    }
+
+    pub fn ai_ssd_speed_excellent(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "{DISK} SSD đọc: {SPEED:.1} MB/s - xuất sắc",
+            Language::English => "{DISK} SSD read speed: {SPEED:.1} MB/s - excellent",
+        }
+    }
+
+    pub fn ai_ssd_speed_good(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "{DISK} SSD đọc: {SPEED:.1} MB/s - tốt",
+            Language::English => "{DISK} SSD read speed: {SPEED:.1} MB/s - good",
+        }
+    }
+
+    pub fn ai_ssd_speed_below_avg(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "{DISK} SSD đọc: {SPEED:.1} MB/s - dưới trung bình",
+            Language::English => "{DISK} SSD read speed: {SPEED:.1} MB/s - below average",
+        }
+    }
+
+    pub fn ai_hdd_speed_excellent(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "{DISK} HDD đọc: {SPEED:.1} MB/s - xuất sắc",
+            Language::English => "{DISK} HDD read speed: {SPEED:.1} MB/s - excellent",
+        }
+    }
+
+    pub fn ai_hdd_speed_good(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "{DISK} HDD đọc: {SPEED:.1} MB/s - tốt",
+            Language::English => "{DISK} HDD read speed: {SPEED:.1} MB/s - good",
+        }
+    }
+
+    // ========== SMART & Thermal Status ==========
+    pub fn smart_verified(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đã xác minh",
+            Language::English => "Verified",
+        }
+    }
+
+    pub fn smart_failing(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đang thất bại",
+            Language::English => "Failing",
+        }
+    }
+
+    pub fn smart_unknown(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Không rõ",
+            Language::English => "Unknown",
+        }
+    }
+
+    pub fn thermal_nominal(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Bình thường",
+            Language::English => "Nominal",
+        }
+    }
+
+    pub fn thermal_moderate(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Vừa phải",
+            Language::English => "Moderate",
+        }
+    }
+
+    pub fn thermal_heavy(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Nặng",
+            Language::English => "Heavy",
+        }
+    }
+
+    pub fn thermal_trapping(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đang bẫy nhiệt",
+            Language::English => "Trapping",
+        }
+    }
+
+    pub fn thermal_sleeping(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đang ngủ",
+            Language::English => "Sleeping",
+        }
+    }
+
+    // ========== Issue Prefixes ==========
+    pub fn issue_cpu(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "CPU: {}",
+            Language::English => "CPU: {}",
+        }
+    }
+
+    pub fn issue_ram(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "RAM: {}",
+            Language::English => "RAM: {}",
+        }
+    }
+
+    pub fn issue_disk(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đĩa: {}",
+            Language::English => "Disk: {}",
+        }
+    }
+
+    pub fn issue_disk_indexed(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đĩa #{} ({}): {}",
+            Language::English => "Disk #{} ({}): {}",
+        }
+    }
+
+    pub fn issue_gpu(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "GPU: {}",
+            Language::English => "GPU: {}",
         }
     }
 }

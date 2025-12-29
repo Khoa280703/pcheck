@@ -464,6 +464,7 @@ mod tests {
             duration_secs: 1,
             thread_count: Some(2),
             verbose: false,
+            on_comment: None,
         };
         let result = run_stress_test(config, "Test CPU".to_string(), 2);
 

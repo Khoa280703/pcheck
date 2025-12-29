@@ -181,6 +181,7 @@ mod tests {
     fn test_ram_test_small() {
         let config = RamTestConfig {
             max_gb: Some(0.1), // Only test 100MB
+            on_comment: None,
         };
         let result = run_stress_test(config, 16.0);
 

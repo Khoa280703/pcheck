@@ -26,7 +26,23 @@ pub fn temp_color(temp: f32) -> &'static str {
     }
 }
 
-/// Get temperature status text
+/// Get temperature status text (requires Text for i18n)
+pub fn temp_status_i18n(temp: f32, text: &crate::lang::Text) -> String {
+    let status = if temp < 60.0 {
+        text.temp_status_excellent()
+    } else if temp < 75.0 {
+        text.temp_status_stable()
+    } else if temp < 85.0 {
+        text.temp_status_warm()
+    } else {
+        text.temp_status_hot()
+    };
+    let icon = if temp < 75.0 { "✅" } else if temp < 85.0 { "⚠️" } else { "❌" };
+    format!("{} {}", icon, status)
+}
+
+/// Legacy temp_status - kept for compatibility but deprecated
+#[allow(dead_code)]
 pub fn temp_status(temp: f32) -> &'static str {
     if temp < 60.0 {
         "✅ Rất tốt"
@@ -54,7 +70,19 @@ pub fn usage_color(usage: f32) -> &'static str {
     } // Idle
 }
 
-/// Format large number with suffix (Billion, Trillion)
+/// Format large number with suffix (Billion, Trillion) - i18n version
+pub fn format_large_number_i18n(n: u64, text: &crate::lang::Text) -> String {
+    if n >= 1_000_000_000 {
+        format!("{:.1} {}", n as f64 / 1_000_000_000.0, text.billion_suffix())
+    } else if n >= 1_000_000 {
+        format!("{:.1} {}", n as f64 / 1_000_000.0, text.million_suffix())
+    } else {
+        format_number(n)
+    }
+}
+
+/// Legacy format_large_number - kept for compatibility but deprecated
+#[allow(dead_code)]
 pub fn format_large_number(n: u64) -> String {
     if n >= 1_000_000_000 {
         format!("{:.1} Tỷ", n as f64 / 1_000_000_000.0)

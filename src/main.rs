@@ -264,22 +264,25 @@ fn run_info_mode_all(text: &Text, ai: &AiTechnician) {
 
 /// Standalone language selection
 fn select_language_standalone() -> Language {
+    // Create a default Text for Vietnamese (default language)
+    let default_text = Text::new(Language::Vietnamese);
+
     println!();
     println!("============================================================");
     println!("🤖 PCHECKER v0.2.0");
     println!("============================================================");
     println!();
-    println!("Chọn ngôn ngữ / Select language:");
+    println!("{}", default_text.language_select_prompt());
     println!();
-    println!("  [1] Tiếng Việt");
-    println!("  [2] English");
+    println!("  [1] {}", default_text.language_option_vi());
+    println!("  [2] {}", default_text.language_option_en());
     println!();
 
     let stdin = io::stdin();
     let mut input = String::new();
 
     loop {
-        print!("Your choice [1-2]: ");
+        print!("{}", default_text.language_choice_prompt());
         io::stdout().flush().unwrap();
 
         input.clear();
@@ -289,7 +292,7 @@ fn select_language_standalone() -> Language {
                     "1" | "vi" | "VI" | "vietnamese" => return Language::Vietnamese,
                     "2" | "en" | "EN" | "english" => return Language::English,
                     _ => {
-                        println!("⚠️  Invalid choice. Please select 1 or 2.");
+                        println!("{}", default_text.language_invalid_choice());
                         continue;
                     }
                 }
@@ -411,6 +414,7 @@ fn run_health_check_mode(duration: u64, text: &Text, ai: &AiTechnician, run_cpu:
                 test_path: None,
                 test_size_mb: 100,
                 include_seek_test: true,
+                text: text.clone(),
                 verbose: false,
                 on_comment: Some(Box::new(move |msg| {
                     ai_clone.comment_realtime(msg);

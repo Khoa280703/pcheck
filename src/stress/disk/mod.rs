@@ -11,12 +11,15 @@ use std::io::{self, BufWriter};
 
 use super::HealthStatus;
 use smart::SmartData;
+use crate::lang::Text;
 
 pub struct DiskTestConfig {
     pub test_path: Option<String>,
     pub test_size_mb: u64,
     pub include_seek_test: bool,
     pub verbose: bool,
+    // Text for i18n
+    pub text: Text,
     // AI commentary callbacks (optional, for real-time comments)
     pub on_comment: Option<Box<dyn Fn(&str) + Send>>,
 }
@@ -28,6 +31,7 @@ impl Default for DiskTestConfig {
             test_size_mb: 100,
             include_seek_test: true,
             verbose: false,
+            text: Text::new(crate::lang::Language::Vietnamese),
             on_comment: None,
         }
     }
@@ -148,19 +152,35 @@ pub fn run_stress_test(
     }
 
     // AI commentary on disk speed
+    let text = &config.text;
     if let Some(ref callback) = comment_callback {
         if is_ssd {
             if read_speed > 500.0 {
-                callback(&format!("{} SSD read speed: {:.1} MB/s - excellent", disk_name, read_speed));
+                let msg = text.ai_ssd_speed_excellent()
+                    .replace("{DISK}", &disk_name)
+                    .replace("{SPEED}", &format!("{:.1}", read_speed));
+                callback(&msg);
             } else if read_speed > 200.0 {
-                callback(&format!("{} SSD read speed: {:.1} MB/s - good", disk_name, read_speed));
+                let msg = text.ai_ssd_speed_good()
+                    .replace("{DISK}", &disk_name)
+                    .replace("{SPEED}", &format!("{:.1}", read_speed));
+                callback(&msg);
             } else {
-                callback(&format!("{} SSD read speed: {:.1} MB/s - below average", disk_name, read_speed));
+                let msg = text.ai_ssd_speed_below_avg()
+                    .replace("{DISK}", &disk_name)
+                    .replace("{SPEED}", &format!("{:.1}", read_speed));
+                callback(&msg);
             }
         } else if read_speed > 100.0 {
-            callback(&format!("{} HDD read speed: {:.1} MB/s - excellent", disk_name, read_speed));
+            let msg = text.ai_hdd_speed_excellent()
+                .replace("{DISK}", &disk_name)
+                .replace("{SPEED}", &format!("{:.1}", read_speed));
+            callback(&msg);
         } else if read_speed > 50.0 {
-            callback(&format!("{} HDD read speed: {:.1} MB/s - good", disk_name, read_speed));
+            let msg = text.ai_hdd_speed_good()
+                .replace("{DISK}", &disk_name)
+                .replace("{SPEED}", &format!("{:.1}", read_speed));
+            callback(&msg);
         } else {
             callback(&format!("{} HDD read speed: {:.1} MB/s", disk_name, read_speed));
         }
@@ -199,7 +219,8 @@ pub fn run_stress_test(
     }
 
     // Evaluate health
-    let health = evaluate_disk_health(write_speed, read_speed, seek_time, bad_sectors, is_ssd);
+    let text = &config.text;
+    let health = evaluate_disk_health(write_speed, read_speed, seek_time, bad_sectors, is_ssd, text);
 
     DiskTestResult {
         disk_name,
@@ -474,15 +495,15 @@ fn cleanup_test_file(path: &PathBuf) {
 }
 
 /// Evaluate disk health based on test results
-fn evaluate_disk_health(write: f64, read: f64, seek: f64, bad_sectors: u64, is_ssd: bool) -> HealthStatus {
+fn evaluate_disk_health(write: f64, read: f64, seek: f64, bad_sectors: u64, is_ssd: bool, text: &Text) -> HealthStatus {
     let mut issues = Vec::new();
 
     // Critical: bad sectors detected
     if bad_sectors > 0 {
-        return HealthStatus::Failed(format!(
-            "Bad sectors detected ({} sectors) - disk failure imminent",
-            bad_sectors
-        ));
+        return HealthStatus::Failed(
+            text.disk_bad_sectors()
+                .replace("{}", &bad_sectors.to_string())
+        );
     }
 
     // Speed thresholds differ for SSD vs HDD
@@ -494,38 +515,38 @@ fn evaluate_disk_health(write: f64, read: f64, seek: f64, bad_sectors: u64, is_s
 
     // Critical: extremely slow speeds
     if read < min_read {
-        return HealthStatus::Failed(format!(
-            "Extremely slow read speed ({:.1} MB/s) - dying disk",
-            read
-        ));
+        return HealthStatus::Failed(
+            text.disk_slow_read()
+                .replace("{:.1}", &format!("{:.1}", read))
+        );
     }
 
     if write < min_write {
-        return HealthStatus::Failed(format!(
-            "Extremely slow write speed ({:.1} MB/s) - dying disk",
-            write
-        ));
+        return HealthStatus::Failed(
+            text.disk_slow_write()
+                .replace("{:.1}", &format!("{:.1}", write))
+        );
     }
 
     // Issues: slow seek time (if seek test was run)
     if seek > 0.0 && seek > max_seek {
-        issues.push(format!(
-            "Slow seek time ({:.1}ms) - possible mechanical issue",
-            seek
-        ));
+        issues.push(
+            text.disk_slow_seek()
+                .replace("{:.1}", &format!("{:.1}", seek))
+        );
     }
 
     // Issues: speed warning (slower than expected but not critical)
     if is_ssd && read < 100.0 {
-        issues.push(format!(
-            "SSD read speed below average ({:.1} MB/s)",
-            read
-        ));
+        issues.push(
+            text.disk_ssd_slow()
+                .replace("{:.1}", &format!("{:.1}", read))
+        );
     } else if !is_ssd && read < 50.0 {
-        issues.push(format!(
-            "HDD read speed below average ({:.1} MB/s)",
-            read
-        ));
+        issues.push(
+            text.disk_hdd_slow()
+                .replace("{:.1}", &format!("{:.1}", read))
+        );
     }
 
     if !issues.is_empty() {
@@ -599,6 +620,7 @@ fn get_disk_device_windows() -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::lang::Language;
 
     #[test]
     fn test_disk_test_small() {
@@ -607,6 +629,8 @@ mod tests {
             test_size_mb: 1,  // Only 1MB for quick test
             include_seek_test: false,
             verbose: false,
+            text: Text::new(Language::Vietnamese),
+            on_comment: None,
         };
         let result = run_stress_test(
             config,
@@ -625,39 +649,41 @@ mod tests {
 
     #[test]
     fn test_evaluate_disk_health() {
+        let text = Text::new(Language::Vietnamese);
+
         // Healthy SSD
         assert!(matches!(
-            evaluate_disk_health(500.0, 2000.0, 0.5, 0, true),
+            evaluate_disk_health(500.0, 2000.0, 0.5, 0, true, &text),
             HealthStatus::Healthy
         ));
 
         // Healthy HDD
         assert!(matches!(
-            evaluate_disk_health(100.0, 80.0, 10.0, 0, false),
+            evaluate_disk_health(100.0, 80.0, 10.0, 0, false, &text),
             HealthStatus::Healthy
         ));
 
         // Failed - bad sectors
         assert!(matches!(
-            evaluate_disk_health(500.0, 2000.0, 0.5, 1, true),
+            evaluate_disk_health(500.0, 2000.0, 0.5, 1, true, &text),
             HealthStatus::Failed(_)
         ));
 
         // Failed - extremely slow read (SSD)
         assert!(matches!(
-            evaluate_disk_health(500.0, 20.0, 0.5, 0, true),
+            evaluate_disk_health(500.0, 20.0, 0.5, 0, true, &text),
             HealthStatus::Failed(_)
         ));
 
         // Failed - extremely slow write (HDD)
         assert!(matches!(
-            evaluate_disk_health(5.0, 80.0, 10.0, 0, false),
+            evaluate_disk_health(5.0, 80.0, 10.0, 0, false, &text),
             HealthStatus::Failed(_)
         ));
 
         // Issues - slow seek (HDD)
         assert!(matches!(
-            evaluate_disk_health(100.0, 80.0, 25.0, 0, false),
+            evaluate_disk_health(100.0, 80.0, 25.0, 0, false, &text),
             HealthStatus::IssuesDetected(_)
         ));
     }
