@@ -6,6 +6,7 @@ pub mod ram;
 pub mod disk;
 pub mod gpu;
 pub mod gpu_compute;
+pub mod torture;
 
 /// Health status after hardware test
 #[derive(Debug, Clone, PartialEq)]
