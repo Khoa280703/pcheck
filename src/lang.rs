@@ -79,13 +79,6 @@ impl Text {
         }
     }
 
-    pub fn detecting(&self) -> &str {
-        match self.lang {
-            Language::Vietnamese => "Đang phát hiện phần cứng...",
-            Language::English => "Detecting hardware...",
-        }
-    }
-
     pub fn no_gpu(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Không phát hiện GPU rời",
@@ -831,27 +824,6 @@ impl Text {
         match self.lang {
             Language::Vietnamese => "Cấu hình ổn định, đủ dùng cho công việc hàng ngày.",
             Language::English => "Decent configuration, good enough for daily tasks.",
-        }
-    }
-
-    pub fn ai_stress_intro(&self, _component: &str) -> &str {
-        match self.lang {
-            Language::Vietnamese => "Được rồi, bây giờ tôi sẽ ép xung để xem tản nhiệt thế nào.",
-            Language::English => "Alright, now I'll stress test to see how the cooling performs.",
-        }
-    }
-
-    pub fn ai_complete(&self) -> &str {
-        match self.lang {
-            Language::Vietnamese => "Xong! Đã hoàn thành bài kiểm tra.",
-            Language::English => "Done! Test completed.",
-        }
-    }
-
-    pub fn ai_start(&self) -> &str {
-        match self.lang {
-            Language::Vietnamese => "Bắt đầu kiểm tra...",
-            Language::English => "Starting check...",
         }
     }
 

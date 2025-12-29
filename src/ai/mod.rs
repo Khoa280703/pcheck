@@ -10,15 +10,13 @@ use crate::lang::Language;
 #[derive(Clone)]
 pub struct AiTechnician {
     pub enabled: bool,
-    pub lang: Language,
     typewriter_delay_ms: u64,
 }
 
 impl AiTechnician {
-    pub fn new(lang: Language) -> Self {
+    pub fn new(_lang: Language) -> Self {
         Self {
             enabled: true,  // Always on as per user decision
-            lang,
             typewriter_delay_ms: 10,  // Faster typewriter for better UX
         }
     }
@@ -80,25 +78,6 @@ impl AiTechnician {
         };
         self.type_print(&format!("   -> {}", reaction));
         self.think(500);
-    }
-
-    /// Print AI intro for stress test
-    pub fn intro_stress(&self, text: &Text, _component: &str) {
-        if !self.enabled {
-            return;
-        }
-
-        self.type_print(&format!("🏁 AI: {}", text.ai_stress_intro("")));
-        self.think(300);
-    }
-
-    /// Print AI completion message
-    pub fn complete(&self, text: &Text) {
-        if !self.enabled {
-            return;
-        }
-
-        self.type_print(&format!("💬 AI: {}", text.ai_complete()));
     }
 
     /// Real-time comment during test (no typewriter for speed)
