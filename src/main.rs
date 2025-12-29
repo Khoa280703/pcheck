@@ -23,53 +23,29 @@ use stress::{CpuTestConfig, RamTestConfig, DiskTestConfig, HealthStatus};
 #[command(version = "0.3.0")]
 #[command(about = "Hardware detection and health check tool", long_about = None)]
 struct Args {
-    /// Run health check mode (CPU + RAM + Disk)
-    #[arg(short, long)]
-    stress: bool,
-
-    /// Run CPU stress test only
+    /// Show hardware info only (no tests)
     #[arg(long)]
-    cpu_stress: bool,
+    info: bool,
 
-    /// Run RAM stress test only
+    /// Run CPU test (optional duration in seconds)
+    #[arg(long, value_name = "SECONDS")]
+    cpu: Option<u64>,
+
+    /// Run RAM test
     #[arg(long)]
-    ram_stress: bool,
+    ram: bool,
 
-    /// Run Disk stress test only
+    /// Run Disk test (ALL disks)
     #[arg(long)]
-    disk_stress: bool,
+    disk: bool,
 
-    /// Run GPU stress test only
-    #[arg(long)]
-    gpu_stress: bool,
+    /// Run GPU test (optional duration in seconds)
+    #[arg(long, value_name = "SECONDS")]
+    gpu: Option<u64>,
 
-    /// Test all disks (default: only first/boot disk)
-    #[arg(long, conflicts_with = "disk_index")]
-    all_disks: bool,
-
-    /// Test specific disk by index (0-based, use --list-disks to see available disks)
-    #[arg(long, value_name = "INDEX")]
-    disk_index: Option<usize>,
-
-    /// List all available disks and exit
-    #[arg(long)]
-    list_disks: bool,
-
-    /// Health check duration in seconds (default: 60 for CPU, 30 for RAM)
-    #[arg(short, long, default_value = "60")]
-    duration: u64,
-
-    /// Quick health check (15 seconds)
-    #[arg(long, conflicts_with = "duration")]
-    quick: bool,
-
-    /// Verbose output (show detailed per-core metrics and SMART data)
-    #[arg(short, long)]
-    verbose: bool,
-
-    /// Run torture test (all components simultaneously - PSU & thermal stress test)
-    #[arg(short = 'T', long)]
-    torture: bool,
+    /// Run torture test - all components simultaneously (optional duration in seconds)
+    #[arg(short = 'a', long, value_name = "SECONDS")]
+    all: Option<u64>,
 }
 
 fn main() {
@@ -79,41 +55,40 @@ fn main() {
     let lang = select_language_standalone();
     let text = Text::new(lang);
 
-    // Handle --list-disks
-    if args.list_disks {
-        list_disks_mode(&text);
+    // Determine mode
+    let has_component_flags = args.cpu.is_some() || args.ram || args.disk || args.gpu.is_some();
+    let is_info_mode = args.info;
+    let is_torture_mode = args.all.is_some();
+    let is_auto_mode = !is_info_mode && !has_component_flags && !is_torture_mode;
+
+    // Handle --info
+    if is_info_mode {
+        run_info_mode_all(&text);
         return;
     }
 
-    // Handle --torture (takes precedence over other stress modes)
-    if args.torture {
-        run_torture_mode(args.duration, args.verbose, &text);
+    // Handle --all (torture test)
+    if is_torture_mode {
+        let duration = args.all.unwrap_or(60);
+        run_torture_mode(duration, &text);
         return;
     }
 
-    // Determine duration
-    let duration = if args.quick {
-        15
-    } else {
-        args.duration
-    };
+    // Handle component-specific tests
+    if has_component_flags {
+        run_component_tests(&args, &text);
+        return;
+    }
 
-    // Determine which tests to run
-    let run_cpu = args.stress || args.cpu_stress;
-    let run_ram = args.stress || args.ram_stress;
-    let run_disk = args.stress || args.disk_stress;
-    let run_gpu = args.stress || args.gpu_stress;
-    let run_any_test = run_cpu || run_ram || run_disk || run_gpu;
-
-    if run_any_test {
-        run_health_check_mode(duration, args.verbose, &text, run_cpu, run_ram, run_disk, run_gpu, args.quick, args.all_disks, args.disk_index);
-    } else {
-        run_info_mode(&text);
+    // Full auto mode - prompt for level
+    if is_auto_mode {
+        run_auto_mode(&text);
+        return;
     }
 }
 
 /// Run torture test mode (all components simultaneously)
-fn run_torture_mode(duration: u64, _verbose: bool, text: &Text) {
+fn run_torture_mode(duration: u64, text: &Text) {
     let config = stress::torture::TortureConfig {
         duration_secs: duration,
         _verbose: false,
@@ -121,6 +96,134 @@ fn run_torture_mode(duration: u64, _verbose: bool, text: &Text) {
     };
 
     let _result = stress::torture::run_torture_test(config);
+}
+
+/// Run component-specific tests (--cpu, --ram, --disk, --gpu)
+fn run_component_tests(args: &Args, text: &Text) {
+    let cpu_duration = args.cpu.unwrap_or(60);
+    let gpu_duration = args.gpu.unwrap_or(60);
+
+    run_health_check_mode(
+        cpu_duration,
+        text,
+        args.cpu.is_some(),
+        args.ram,
+        args.disk,
+        args.gpu.is_some(),
+        gpu_duration,
+    );
+}
+
+/// Run full auto mode (prompt for level)
+fn run_auto_mode(text: &Text) {
+    let duration = select_level_prompt(text);
+
+    // Run full test: Info → CPU → RAM → Disk → GPU → Summary
+    run_full_auto_test(duration, text);
+}
+
+/// Level selection prompt
+fn select_level_prompt(text: &Text) -> u64 {
+    println!();
+    println!("============================================================");
+    println!("{} - pchecker v0.3.0", text.select_test_level());
+    println!("============================================================");
+    println!();
+    println!("[1] {} (15s)", text.level_quick());
+    println!("[2] {} (60s)", text.level_normal());
+    println!("[3] {} (120s)", text.level_deep());
+    println!();
+
+    let stdin = io::stdin();
+    let mut input = String::new();
+
+    loop {
+        print!("{} [1-3]: ", text.your_choice());
+        io::stdout().flush().unwrap();
+
+        input.clear();
+        match stdin.read_line(&mut input) {
+            Ok(_) => {
+                match input.trim() {
+                    "1" => return 15,
+                    "2" => return 60,
+                    "3" => return 120,
+                    _ => {
+                        println!("⚠️  {}", text.invalid_choice());
+                        continue;
+                    }
+                }
+            }
+            Err(_) => return 60,
+        }
+    }
+}
+
+/// Run full auto test with selected duration
+fn run_full_auto_test(duration: u64, text: &Text) {
+    // First show info
+    run_info_mode_all(text);
+
+    // Then run all tests
+    run_health_check_mode(
+        duration,
+        text,
+        true,  // CPU
+        true,  // RAM
+        true,  // Disk
+        true,  // GPU
+        duration,
+    );
+}
+
+/// Run info mode - show ALL hardware info
+fn run_info_mode_all(text: &Text) {
+    let start_time = Instant::now();
+
+    // Print header
+    print_header_with_text("v0.3.0", text.header());
+
+    // Detect platform
+    let platform = platform::detect();
+    print_section("💻", text.system(), &platform.to_string());
+
+    // Detect hardware
+    println!("⏳ {}", text.detecting());
+
+    // Detect CPU
+    let cpu = CpuInfo::new();
+    let cpu_display = format!("{} ({} {})", cpu.model, cpu.cores, text.cores_label());
+    print_section("🧠", text.cpu(), &cpu_display);
+
+    // Detect GPU
+    let gpus = GpuInfo::new();
+    if gpus.len() > 1 {
+        for (idx, gpu) in gpus.iter().enumerate() {
+            print_section("🎮", &format!("{} #{}", text.gpu(), idx), &gpu.display_localized(text));
+        }
+    } else if let Some(gpu) = gpus.first() {
+        print_section("🎮", text.gpu(), &gpu.display_localized(text));
+    } else {
+        print_section("🎮", text.gpu(), text.no_gpu());
+    }
+
+    // Detect RAM
+    let ram = RamInfo::new();
+    let ram_display = format!("{:.1} GB ({:.1} GB {})", ram.total_gb, ram.used_gb, text.ram_free());
+    print_section("💾", text.ram(), &ram_display);
+
+    // Detect ALL disks
+    let disks = DiskInfo::new();
+    if disks.len() > 1 {
+        for (idx, disk) in disks.iter().enumerate() {
+            print_section("💿", &format!("{} #{}", text.disk(), idx), &disk.display());
+        }
+    } else if let Some(disk) = disks.first() {
+        print_section("💿", text.disk(), &disk.display());
+    }
+
+    // Print footer
+    print_footer_with_text(start_time, text.done_in());
 }
 
 /// Standalone language selection
@@ -160,82 +263,8 @@ fn select_language_standalone() -> Language {
     }
 }
 
-/// Run info-only mode (v0.1.0 behavior)
-fn run_info_mode(text: &Text) {
-    let start_time = Instant::now();
-
-    // Print header
-    print_header_with_text("v0.2.0", text.header());
-
-    // Detect platform
-    let platform = platform::detect();
-    print_section("💻", text.system(), &platform.to_string());
-
-    // Detect hardware
-    println!("⏳ {}", text.detecting());
-
-    // Detect CPU
-    let cpu = CpuInfo::new();
-    let cpu_display = format!("{} ({} {})", cpu.model, cpu.cores, text.cores_label());
-    print_section("🧠", text.cpu(), &cpu_display);
-
-    // Detect GPU
-    let gpus = GpuInfo::new();
-    if let Some(gpu) = gpus.first() {
-        print_section("🎮", text.gpu(), &gpu.display_localized(text));
-    } else {
-        print_section("🎮", text.gpu(), text.no_gpu());
-    }
-
-    // Detect RAM
-    let ram = RamInfo::new();
-    let ram_display = format!("{:.1} GB ({:.1} GB {})", ram.total_gb, ram.used_gb, text.ram_free());
-    print_section("💾", text.ram(), &ram_display);
-
-    // Detect Disk (show first one)
-    let disks = DiskInfo::new();
-    if let Some(disk) = disks.first() {
-        print_section("💿", text.disk(), &disk.display());
-    }
-
-    // Print footer
-    print_footer_with_text(start_time, text.done_in());
-}
-
-/// List all available disks
-fn list_disks_mode(text: &Text) {
-    println!();
-    println!("============================================================");
-    println!("💿 {} - pchecker v0.3.0", text.disk());
-    println!("============================================================");
-    println!();
-
-    let disks = DiskInfo::new();
-
-    if disks.is_empty() {
-        println!("No disks detected.");
-        return;
-    }
-
-    for (idx, disk) in disks.iter().enumerate() {
-        println!("[{}] {}", idx, disk.name);
-        println!("    Size: {:.0} GB", disk.total_gb);
-        println!("    Used: {:.0} GB / {:.0} GB ({:.0}%)",
-            disk.used_gb,
-            disk.total_gb,
-            (disk.used_gb / disk.total_gb * 100.0)
-        );
-        println!("    Available: {:.0} GB", disk.available_gb);
-        println!("    Mount: {}", disk.mount_point);
-        println!();
-    }
-
-    println!("Use --disk-stress --disk-index <N> to test specific disk");
-    println!("Use --disk-stress --all-disks to test all disks");
-}
-
 /// Run health check mode (v0.3.0 feature)
-fn run_health_check_mode(duration: u64, verbose: bool, text: &Text, run_cpu: bool, run_ram: bool, run_disk: bool, run_gpu: bool, quick: bool, all_disks: bool, disk_index: Option<usize>) {
+fn run_health_check_mode(duration: u64, text: &Text, run_cpu: bool, run_ram: bool, run_disk: bool, run_gpu: bool, gpu_duration: u64) {
     let start_time = Instant::now();
 
     println!();
@@ -254,20 +283,12 @@ fn run_health_check_mode(duration: u64, verbose: bool, text: &Text, run_cpu: boo
     let disk_info_list = DiskInfo::new();
     let gpu_info_list = GpuInfo::new();
 
-    // Determine which disks to test
-    let disks_to_test: Vec<(usize, crate::hw::DiskInfo)> = if all_disks {
-        disk_info_list.iter().enumerate().map(|(i, d)| (i, d.clone())).collect()
-    } else if let Some(idx) = disk_index {
-        if idx < disk_info_list.len() {
-            vec![(idx, disk_info_list[idx].clone())]
-        } else {
-            eprintln!("❌ Invalid disk index: {}. Use --list-disks to see available disks.", idx);
-            return;
-        }
-    } else {
-        // Default: test first disk only
-        disk_info_list.first().map(|d| vec![(0, d.clone())]).unwrap_or_default()
-    };
+    // Test ALL disks
+    let disks_to_test: Vec<(usize, crate::hw::DiskInfo)> = disk_info_list
+        .iter()
+        .enumerate()
+        .map(|(i, d)| (i, d.clone()))
+        .collect();
 
     // CPU Test
     if run_cpu {
@@ -277,7 +298,7 @@ fn run_health_check_mode(duration: u64, verbose: bool, text: &Text, run_cpu: boo
         let cpu_config = CpuTestConfig {
             duration_secs: duration,
             thread_count: None,
-            verbose,
+            verbose: false,
         };
         let cpu_result = stress::run_cpu_test(cpu_config, cpu_info.model.clone(), cpu_info.cores);
 
@@ -320,23 +341,19 @@ fn run_health_check_mode(duration: u64, verbose: bool, text: &Text, run_cpu: boo
 
     // Disk Test
     if run_disk {
-        // Quick mode: smaller test size (10MB), no seek test
-        let disk_size_mb = if quick { 10 } else { 100 };
-        let include_seek = !quick;
-
         for (idx, disk_info) in &disks_to_test {
             if disks_to_test.len() > 1 {
-                println!("⏳ {} #{} (~{}s)", text.testing_disk(), idx, if quick { 5 } else { 30 });
+                println!("⏳ {} #{} (~30s)", text.testing_disk(), idx);
             } else {
-                println!("⏳ {} (~{}s)", text.testing_disk(), if quick { 5 } else { 30 });
+                println!("⏳ {} (~30s)", text.testing_disk());
             }
             io::stdout().flush().unwrap();
 
             let disk_config = DiskTestConfig {
                 test_path: None,
-                test_size_mb: disk_size_mb,
-                include_seek_test: include_seek,
-                verbose,
+                test_size_mb: 100,
+                include_seek_test: true,
+                verbose: false,
             };
             let disk_result = stress::run_disk_test(
                 disk_config,
@@ -374,15 +391,15 @@ fn run_health_check_mode(duration: u64, verbose: bool, text: &Text, run_cpu: boo
         } else {
             for (idx, gpu_info) in gpu_info_list.iter().enumerate() {
                 if gpu_info_list.len() > 1 {
-                    println!("⏳ {} #{} (~{}s)", text.testing_gpu(), idx, duration);
+                    println!("⏳ {} #{} (~{}s)", text.testing_gpu(), idx, gpu_duration);
                 } else {
-                    println!("⏳ {} (~{}s)", text.testing_gpu(), duration);
+                    println!("⏳ {} (~{}s)", text.testing_gpu(), gpu_duration);
                 }
                 io::stdout().flush().unwrap();
 
                 let gpu_config = stress::GpuTestConfig {
-                    duration_secs: duration,
-                    verbose,
+                    duration_secs: gpu_duration,
+                    verbose: false,
                 };
                 let gpu_result = stress::run_gpu_test(
                     gpu_config,

@@ -750,4 +750,47 @@ impl Text {
             Language::English => "N/A",
         }
     }
+
+    // Level selection prompt
+    pub fn select_test_level(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Chọn mức độ kiểm tra",
+            Language::English => "Select test level",
+        }
+    }
+
+    pub fn level_quick(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Nhanh",
+            Language::English => "Quick",
+        }
+    }
+
+    pub fn level_normal(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Thường",
+            Language::English => "Normal",
+        }
+    }
+
+    pub fn level_deep(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Chuyên sâu",
+            Language::English => "Deep",
+        }
+    }
+
+    pub fn your_choice(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Lựa chọn của bạn",
+            Language::English => "Your choice",
+        }
+    }
+
+    pub fn invalid_choice(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Lựa chọn không hợp lệ. Vui lòng chọn 1, 2 hoặc 3.",
+            Language::English => "Invalid choice. Please select 1, 2, or 3.",
+        }
+    }
 }
