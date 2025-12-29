@@ -15,25 +15,43 @@ pub const DARK_GRAY: &str = "\x1b[90m";
 
 /// Get color for temperature value
 pub fn temp_color(temp: f32) -> &'static str {
-    if temp < 60.0 { GREEN }
-    else if temp < 75.0 { YELLOW }
-    else if temp < 85.0 { ORANGE }
-    else { RED }
+    if temp < 60.0 {
+        GREEN
+    } else if temp < 75.0 {
+        YELLOW
+    } else if temp < 85.0 {
+        ORANGE
+    } else {
+        RED
+    }
 }
 
 /// Get temperature status text
 pub fn temp_status(temp: f32) -> &'static str {
-    if temp < 60.0 { "✅ Rất tốt" }
-    else if temp < 75.0 { "✅ Ổn định" }
-    else if temp < 85.0 { "⚠️ Ấn" }
-    else { "❌ Nóng" }
+    if temp < 60.0 {
+        "✅ Rất tốt"
+    } else if temp < 75.0 {
+        "✅ Ổn định"
+    } else if temp < 85.0 {
+        "⚠️ Ấm"
+    } else {
+        "❌ Nóng"
+    }
 }
 
 /// Get color for CPU usage % (consistent with temperature colors)
 pub fn usage_color(usage: f32) -> &'static str {
-    if usage > 90.0 { RED }           // Overload - same as "Nóng"
-    else if usage > 50.0 { GREEN }     // Active - same as "Rất tốt"
-    else { DARK_GRAY }                 // Idle
+    if usage > 90.0 {
+        RED
+    }
+    // Overload - same as "Nóng"
+    else if usage > 50.0 {
+        GREEN
+    }
+    // Active - same as "Rất tốt"
+    else {
+        DARK_GRAY
+    } // Idle
 }
 
 /// Format large number with suffix (Billion, Trillion)
@@ -65,7 +83,14 @@ pub fn format_number(n: u64) -> String {
 pub fn progress_bar(percent: u8, width: usize) -> String {
     let filled = (percent as usize * width / 100).min(width);
     let empty = width - filled;
-    format!("{}{}{}{}{}", GREEN, "█".repeat(filled), DARK_GRAY, "░".repeat(empty), RESET)
+    format!(
+        "{}{}{}{}{}",
+        GREEN,
+        "█".repeat(filled),
+        DARK_GRAY,
+        "░".repeat(empty),
+        RESET
+    )
 }
 
 pub fn print_header_with_text(version: &str, tagline: &str) {

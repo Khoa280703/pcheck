@@ -93,6 +93,7 @@ fn run_torture_mode(duration: u64, text: &Text) {
         duration_secs: duration,
         _verbose: false,
         language: text.lang,
+        skip_confirm: false,  // Ask for confirmation when using --all flag
     };
 
     let _result = stress::torture::run_torture_test(config);
@@ -164,7 +165,7 @@ fn run_full_auto_test(duration: u64, text: &Text) {
     // First show info
     run_info_mode_all(text);
 
-    // Then run all tests
+    // Then run individual tests
     run_health_check_mode(
         duration,
         text,
@@ -174,6 +175,22 @@ fn run_full_auto_test(duration: u64, text: &Text) {
         true,  // GPU
         duration,
     );
+
+    // Finally run torture test (test tổng - all components simultaneously)
+    println!();
+    println!("============================================================");
+    println!("⚡ {} - pchecker v0.3.0", text.torture_final());
+    println!("============================================================");
+    println!();
+
+    let torture_config = stress::torture::TortureConfig {
+        duration_secs: duration,
+        _verbose: false,
+        language: text.lang,
+        skip_confirm: true,  // Skip confirmation in auto mode
+    };
+
+    let _result = stress::torture::run_torture_test(torture_config);
 }
 
 /// Run info mode - show ALL hardware info

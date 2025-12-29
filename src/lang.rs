@@ -793,4 +793,11 @@ impl Text {
             Language::English => "Invalid choice. Please select 1, 2, or 3.",
         }
     }
+
+    pub fn torture_final(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "BÀI TEST TỔNG (TORTURE TEST)",
+            Language::English => "FINAL TEST (TORTURE TEST)",
+        }
+    }
 }

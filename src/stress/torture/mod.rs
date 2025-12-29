@@ -21,6 +21,7 @@ pub struct TortureConfig {
     pub duration_secs: u64,
     pub _verbose: bool,
     pub language: Language,
+    pub skip_confirm: bool,
 }
 
 pub struct TortureResult {
@@ -52,29 +53,31 @@ pub fn run_torture_test(config: TortureConfig) -> TortureResult {
     println!("{} {} {} {}", text.torture_duration(), config.duration_secs, text.seconds(), text.torture_cancel_info());
     println!();
 
-    // Confirm prompt
-    print!("{} [Y/n]: ", text.torture_confirm());
-    io::stdout().flush().unwrap();
+    // Confirm prompt (skip if configured)
+    if !config.skip_confirm {
+        print!("{} [Y/n]: ", text.torture_confirm());
+        io::stdout().flush().unwrap();
 
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
 
-    let input = input.trim().to_lowercase();
-    if input == "n" || input == "no" {
-        println!("❌ {}", text.torture_cancelled());
-        return TortureResult {
-            _duration_actual_secs: 0,
-            _cpu_result: None,
-            _ram_result: None,
-            _disk_result: None,
-            _gpu_result: None,
-            _survived: false,
-        };
+        let input = input.trim().to_lowercase();
+        if input == "n" || input == "no" {
+            println!("❌ {}", text.torture_cancelled());
+            return TortureResult {
+                _duration_actual_secs: 0,
+                _cpu_result: None,
+                _ram_result: None,
+                _disk_result: None,
+                _gpu_result: None,
+                _survived: false,
+            };
+        }
+
+        println!();
+        println!("🔥 {}...", text.torture_starting());
+        println!();
     }
-
-    println!();
-    println!("🔥 {}...", text.torture_starting());
-    println!();
 
     // Give user a moment to prepare
     thread::sleep(Duration::from_secs(2));
