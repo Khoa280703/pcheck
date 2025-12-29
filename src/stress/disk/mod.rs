@@ -17,6 +17,8 @@ pub struct DiskTestConfig {
     pub test_size_mb: u64,
     pub include_seek_test: bool,
     pub verbose: bool,
+    // AI commentary callbacks (optional, for real-time comments)
+    pub on_comment: Option<Box<dyn Fn(&str) + Send>>,
 }
 
 impl Default for DiskTestConfig {
@@ -26,6 +28,7 @@ impl Default for DiskTestConfig {
             test_size_mb: 100,
             include_seek_test: true,
             verbose: false,
+            on_comment: None,
         }
     }
 }
@@ -73,6 +76,9 @@ pub fn run_stress_test(
 
     // Detect disk type (SSD/HDD) based on mount point
     let is_ssd = detect_disk_type(&test_path);
+
+    // Clone callback for use
+    let comment_callback = config.on_comment;
 
     if config.verbose {
         println!("📁 Test file: {}", test_path_str);
@@ -139,6 +145,25 @@ pub fn run_stress_test(
             smart: None,
             health: HealthStatus::Failed("Read test failed - possible disk failure".to_string()),
         };
+    }
+
+    // AI commentary on disk speed
+    if let Some(ref callback) = comment_callback {
+        if is_ssd {
+            if read_speed > 500.0 {
+                callback(&format!("{} SSD read speed: {:.1} MB/s - excellent", disk_name, read_speed));
+            } else if read_speed > 200.0 {
+                callback(&format!("{} SSD read speed: {:.1} MB/s - good", disk_name, read_speed));
+            } else {
+                callback(&format!("{} SSD read speed: {:.1} MB/s - below average", disk_name, read_speed));
+            }
+        } else if read_speed > 100.0 {
+            callback(&format!("{} HDD read speed: {:.1} MB/s - excellent", disk_name, read_speed));
+        } else if read_speed > 50.0 {
+            callback(&format!("{} HDD read speed: {:.1} MB/s - good", disk_name, read_speed));
+        } else {
+            callback(&format!("{} HDD read speed: {:.1} MB/s", disk_name, read_speed));
+        }
     }
 
     // === PHASE 3: Seek Test (optional) ===

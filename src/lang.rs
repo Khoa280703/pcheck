@@ -575,8 +575,12 @@ impl Text {
 
     pub fn torture_warning(&self) -> &str {
         match self.lang {
-            Language::Vietnamese => "Đây là bài test cường độ cao. Hệ thống sẽ bị đẩy tới giới hạn.",
-            Language::English => "This is a high-intensity test. Your system will be pushed to its limits.",
+            Language::Vietnamese => {
+                "Đây là bài test cường độ cao. Hệ thống sẽ bị đẩy tới giới hạn."
+            }
+            Language::English => {
+                "This is a high-intensity test. Your system will be pushed to its limits."
+            }
         }
     }
 
@@ -646,7 +650,7 @@ impl Text {
 
     pub fn torture_summary(&self) -> &str {
         match self.lang {
-            Language::Vietnamese => "TÓM TẮT BÀI TEST ĐỐT LÒ",
+            Language::Vietnamese => "TÓM TẮT BÀI TEST TỔNG",
             Language::English => "TORTURE TEST SUMMARY",
         }
     }
@@ -660,7 +664,7 @@ impl Text {
 
     pub fn torture_passed(&self) -> &str {
         match self.lang {
-            Language::Vietnamese => "HỆ THỐNG ĐÃ VƯỢT QUA BÀI TEST ĐỐT LÒ! Máy ổn định.",
+            Language::Vietnamese => "HỆ THỐNG ĐÃ VƯỢT QUA BÀI TEST TỔNG! Máy ổn định.",
             Language::English => "SYSTEM SURVIVED THE TORTURE TEST! Hardware is stable.",
         }
     }
@@ -798,6 +802,78 @@ impl Text {
         match self.lang {
             Language::Vietnamese => "BÀI TEST TỔNG (TORTURE TEST)",
             Language::English => "FINAL TEST (TORTURE TEST)",
+        }
+    }
+
+    // AI Technician personality
+    pub fn ai_greet(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Xin chào! Để tôi khám sức khỏe cho chiếc máy này nhé.",
+            Language::English => "Hello! Let me check the health of this machine.",
+        }
+    }
+
+    pub fn ai_detecting(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Đang ngó qua cấu hình phần cứng một chút...",
+            Language::English => "Taking a quick look at the hardware configuration...",
+        }
+    }
+
+    pub fn ai_specs_good(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Chà, máy ngon đấy! Cấu hình này dư sức làm việc nặng.",
+            Language::English => "Wow, nice machine! This config can handle heavy workloads.",
+        }
+    }
+
+    pub fn ai_specs_ok(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Cấu hình ổn định, đủ dùng cho công việc hàng ngày.",
+            Language::English => "Decent configuration, good enough for daily tasks.",
+        }
+    }
+
+    pub fn ai_stress_intro(&self, _component: &str) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Được rồi, bây giờ tôi sẽ ép xung để xem tản nhiệt thế nào.",
+            Language::English => "Alright, now I'll stress test to see how the cooling performs.",
+        }
+    }
+
+    pub fn ai_complete(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Xong! Đã hoàn thành bài kiểm tra.",
+            Language::English => "Done! Test completed.",
+        }
+    }
+
+    pub fn ai_start(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Bắt đầu kiểm tra...",
+            Language::English => "Starting check...",
+        }
+    }
+
+    // AI post-test reactions
+    pub fn ai_pass(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Hoàn thành tốt. Không phát hiện vấn đề.",
+            Language::English => "Test passed. No issues detected.",
+        }
+    }
+
+    pub fn ai_warning(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Hoàn thành nhưng có cảnh báo. Nên kiểm tra lại.",
+            Language::English => "Test completed with warnings. Recommend review.",
+        }
+    }
+
+    pub fn ai_fail(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "Thất bại. Cần kiểm tra ngay.",
+            Language::English => "Test failed. Immediate attention needed.",
         }
     }
 }

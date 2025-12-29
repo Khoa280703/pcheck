@@ -18,6 +18,8 @@ pub struct CpuTestConfig {
     pub duration_secs: u64,
     pub thread_count: Option<usize>,
     pub verbose: bool,
+    // AI commentary callbacks (optional, for real-time comments)
+    pub on_comment: Option<Box<dyn Fn(&str) + Send>>,
 }
 
 impl Default for CpuTestConfig {
@@ -26,6 +28,7 @@ impl Default for CpuTestConfig {
             duration_secs: 60,
             thread_count: None,
             verbose: false,
+            on_comment: None,
         }
     }
 }
@@ -65,6 +68,9 @@ pub fn run_stress_test(config: CpuTestConfig, cpu_model: String, cpu_cores: usiz
     // Shared counter for total operations (for progress display)
     let total_ops = Arc::new(AtomicU64::new(0));
 
+    // Clone callback for use in loop
+    let comment_callback = config.on_comment;
+
     // Spawn worker threads
     let threads: Vec<_> = (0..thread_count)
         .map(|_| {
@@ -100,6 +106,19 @@ pub fn run_stress_test(config: CpuTestConfig, cpu_model: String, cpu_cores: usiz
         let temp = get_cpu_temp();
         let freq = get_cpu_frequency();
         let cpu_usage = monitor.get_per_core_usage();
+
+        // AI commentary based on temperature (every 10 seconds or at start)
+        if let Some(ref callback) = comment_callback {
+            if elapsed == 0 || elapsed % 10 == 0 {
+                if let Some(ref t) = temp {
+                    if t.current > 80.0 {
+                        callback(&format!("CPU temperature at {:.0}°C - running hot", t.current));
+                    } else if t.current > 60.0 {
+                        callback(&format!("CPU temperature at {:.0}°C - warming up nicely", t.current));
+                    }
+                }
+            }
+        }
 
         // Print progress box (overwrites previous)
         // Track if first iteration to avoid moving cursor up before first print

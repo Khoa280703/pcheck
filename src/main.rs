@@ -8,6 +8,7 @@ mod lang;
 mod prompt;
 mod stress;
 mod sensors;
+mod ai;
 
 use std::time::Instant;
 use std::io::{self, Write};
@@ -16,6 +17,7 @@ use hw::{CpuInfo, RamInfo, DiskInfo, GpuInfo};
 use lang::{Text, Language};
 use fmt::{print_header_with_text, print_section, print_footer_with_text};
 use stress::{CpuTestConfig, RamTestConfig, DiskTestConfig, HealthStatus};
+use ai::AiTechnician;
 
 /// pchecker - Hardware detection and health check tool
 #[derive(Parser, Debug)]
@@ -63,7 +65,9 @@ fn main() {
 
     // Handle --info
     if is_info_mode {
-        run_info_mode_all(&text);
+        let ai = AiTechnician::new(text.lang);
+        ai.greet(&text);
+        run_info_mode_all(&text, &ai);
         return;
     }
 
@@ -104,9 +108,13 @@ fn run_component_tests(args: &Args, text: &Text) {
     let cpu_duration = args.cpu.unwrap_or(60);
     let gpu_duration = args.gpu.unwrap_or(60);
 
+    // Create AI technician for component tests
+    let ai = AiTechnician::new(text.lang);
+
     run_health_check_mode(
         cpu_duration,
         text,
+        &ai,
         args.cpu.is_some(),
         args.ram,
         args.disk,
@@ -130,9 +138,9 @@ fn select_level_prompt(text: &Text) -> u64 {
     println!("{} - pchecker v0.3.0", text.select_test_level());
     println!("============================================================");
     println!();
-    println!("[1] {} (15s)", text.level_quick());
-    println!("[2] {} (60s)", text.level_normal());
-    println!("[3] {} (120s)", text.level_deep());
+    println!("[1] {} (~90s)", text.level_quick());
+    println!("[2] {} (~240s)", text.level_normal());
+    println!("[3] {} (~480s)", text.level_deep());
     println!();
 
     let stdin = io::stdin();
@@ -162,13 +170,20 @@ fn select_level_prompt(text: &Text) -> u64 {
 
 /// Run full auto test with selected duration
 fn run_full_auto_test(duration: u64, text: &Text) {
+    // Create AI technician
+    let ai = AiTechnician::new(text.lang);
+
+    // AI greeting
+    ai.greet(&text);
+
     // First show info
-    run_info_mode_all(text);
+    run_info_mode_all(&text, &ai);
 
     // Then run individual tests
     run_health_check_mode(
         duration,
         text,
+        &ai,
         true,  // CPU
         true,  // RAM
         true,  // Disk
@@ -194,7 +209,7 @@ fn run_full_auto_test(duration: u64, text: &Text) {
 }
 
 /// Run info mode - show ALL hardware info
-fn run_info_mode_all(text: &Text) {
+fn run_info_mode_all(text: &Text, ai: &AiTechnician) {
     let start_time = Instant::now();
 
     // Print header
@@ -204,8 +219,8 @@ fn run_info_mode_all(text: &Text) {
     let platform = platform::detect();
     print_section("💻", text.system(), &platform.to_string());
 
-    // Detect hardware
-    println!("⏳ {}", text.detecting());
+    // AI intro
+    ai.intro_detect(text);
 
     // Detect CPU
     let cpu = CpuInfo::new();
@@ -238,6 +253,10 @@ fn run_info_mode_all(text: &Text) {
     } else if let Some(disk) = disks.first() {
         print_section("💿", text.disk(), &disk.display());
     }
+
+    // AI reaction to specs
+    let is_good_config = cpu.cores >= 8 || ram.total_gb >= 16.0;
+    ai.react_specs(text, is_good_config);
 
     // Print footer
     print_footer_with_text(start_time, text.done_in());
@@ -281,7 +300,7 @@ fn select_language_standalone() -> Language {
 }
 
 /// Run health check mode (v0.3.0 feature)
-fn run_health_check_mode(duration: u64, text: &Text, run_cpu: bool, run_ram: bool, run_disk: bool, run_gpu: bool, gpu_duration: u64) {
+fn run_health_check_mode(duration: u64, text: &Text, ai: &AiTechnician, run_cpu: bool, run_ram: bool, run_disk: bool, run_gpu: bool, gpu_duration: u64) {
     let start_time = Instant::now();
 
     println!();
@@ -312,14 +331,24 @@ fn run_health_check_mode(duration: u64, text: &Text, run_cpu: bool, run_ram: boo
         println!("⏳ {} ({}s)", text.testing_cpu(), duration);
         io::stdout().flush().unwrap();
 
+        // Create AI callback for CPU
+        let ai_clone = (*ai).clone();
         let cpu_config = CpuTestConfig {
             duration_secs: duration,
             thread_count: None,
             verbose: false,
+            on_comment: Some(Box::new(move |msg| {
+                ai_clone.comment_realtime(msg);
+            })),
         };
         let cpu_result = stress::run_cpu_test(cpu_config, cpu_info.model.clone(), cpu_info.cores);
 
         let (cpu_healthy, cpu_issues) = print_cpu_result(&cpu_result, text);
+
+        // AI post-test reaction
+        let has_warning = matches!(cpu_result.health, HealthStatus::IssuesDetected(_));
+        ai.react_result(text, cpu_healthy, has_warning);
+
         if !cpu_healthy {
             all_healthy = false;
             if matches!(cpu_result.health, HealthStatus::Failed(_)) {
@@ -338,12 +367,22 @@ fn run_health_check_mode(duration: u64, text: &Text, run_cpu: bool, run_ram: boo
         println!("⏳ {} (~{}s)", text.testing_ram(), ram_duration);
         io::stdout().flush().unwrap();
 
+        // Create AI callback for RAM
+        let ai_clone = (*ai).clone();
         let ram_config = RamTestConfig {
             max_gb: None,
+            on_comment: Some(Box::new(move |msg| {
+                ai_clone.comment_realtime(msg);
+            })),
         };
         let ram_result = stress::run_ram_test(ram_config, ram_info.total_gb);
 
         let (ram_healthy, ram_issues) = print_ram_result(&ram_result, text);
+
+        // AI post-test reaction
+        let has_warning = matches!(ram_result.health, HealthStatus::IssuesDetected(_));
+        ai.react_result(text, ram_healthy, has_warning);
+
         if !ram_healthy {
             all_healthy = false;
             if matches!(ram_result.health, HealthStatus::Failed(_)) {
@@ -366,11 +405,16 @@ fn run_health_check_mode(duration: u64, text: &Text, run_cpu: bool, run_ram: boo
             }
             io::stdout().flush().unwrap();
 
+            // Create AI callback for Disk
+            let ai_clone = (*ai).clone();
             let disk_config = DiskTestConfig {
                 test_path: None,
                 test_size_mb: 100,
                 include_seek_test: true,
                 verbose: false,
+                on_comment: Some(Box::new(move |msg| {
+                    ai_clone.comment_realtime(msg);
+                })),
             };
             let disk_result = stress::run_disk_test(
                 disk_config,
@@ -383,6 +427,11 @@ fn run_health_check_mode(duration: u64, text: &Text, run_cpu: bool, run_ram: boo
             );
 
             let (disk_healthy, disk_issues) = print_disk_result(&disk_result, text);
+
+            // AI post-test reaction
+            let has_warning = matches!(disk_result.health, HealthStatus::IssuesDetected(_));
+            ai.react_result(text, disk_healthy, has_warning);
+
             if !disk_healthy {
                 all_healthy = false;
                 if matches!(disk_result.health, HealthStatus::Failed(_)) {

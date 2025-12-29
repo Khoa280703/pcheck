@@ -10,6 +10,8 @@ use super::HealthStatus;
 #[derive(Default)]
 pub struct RamTestConfig {
     pub max_gb: Option<f64>,
+    // AI commentary callbacks (optional, for real-time comments)
+    pub on_comment: Option<Box<dyn Fn(&str) + Send>>,
 }
 
 
@@ -51,6 +53,9 @@ pub fn run_stress_test(config: RamTestConfig, ram_total_gb: f64) -> RamTestResul
 
     let _start = Instant::now();
 
+    // Clone callback for use in loop
+    let comment_callback = config.on_comment;
+
     // Write test: fill buffer with pattern
     print!("\r⏳ Checking RAM... Writing data...");
     io::stdout().flush().unwrap();
@@ -78,6 +83,17 @@ pub fn run_stress_test(config: RamTestConfig, ram_total_gb: f64) -> RamTestResul
     } else {
         0.0
     };
+
+    // AI commentary on write speed
+    if let Some(ref callback) = comment_callback {
+        if write_speed > 10.0 {
+            callback(&format!("RAM write speed: {:.1} GB/s - excellent", write_speed));
+        } else if write_speed > 5.0 {
+            callback(&format!("RAM write speed: {:.1} GB/s - good", write_speed));
+        } else {
+            callback(&format!("RAM write speed: {:.1} GB/s", write_speed));
+        }
+    }
 
     // Read + verify test
     print!("\r⏳ Checking RAM... Verifying data...");
