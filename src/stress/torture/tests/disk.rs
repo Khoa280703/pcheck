@@ -16,7 +16,7 @@ pub struct DiskTortureTest {
     errors: Arc<AtomicU64>,
     bytes_written: Arc<AtomicU64>,
     bytes_read: Arc<AtomicU64>,
-    start_time: Instant,
+    io_time_ns: Arc<AtomicU64>, // Actual I/O time in NANOSECONDS for precision
     test_size_mb: u64,
     phase: DiskPhase,
     stop_requested: bool,
@@ -67,7 +67,7 @@ impl DiskTortureTest {
             errors: Arc::new(AtomicU64::new(0)),
             bytes_written: Arc::new(AtomicU64::new(0)),
             bytes_read: Arc::new(AtomicU64::new(0)),
-            start_time: Instant::now(),
+            io_time_ns: Arc::new(AtomicU64::new(0)),
             test_size_mb: 10, // Small size for torture mode
             phase: DiskPhase::CreateFile,
             stop_requested: false,
@@ -124,7 +124,13 @@ impl DiskTortureTest {
         let data = vec![0xA5_u8; chunk_size];
 
         if self.chunk_index < self.total_chunks {
-            match file.write_all(&data) {
+            // Time the I/O operation (nanoseconds for precision - fast SSD I/O can be < 1ms)
+            let io_start = Instant::now();
+            let result = file.write_all(&data);
+            let io_elapsed = io_start.elapsed().as_nanos() as u64;
+            self.io_time_ns.fetch_add(io_elapsed, Ordering::Relaxed);
+
+            match result {
                 Ok(_) => {
                     self.bytes_written.fetch_add(chunk_size as u64, Ordering::Relaxed);
                     self.chunk_index += 1;
@@ -155,7 +161,13 @@ impl DiskTortureTest {
         let mut buffer = vec![0u8; chunk_size];
 
         if self.chunk_index < self.total_chunks {
-            match file.read_exact(&mut buffer) {
+            // Time the I/O operation (nanoseconds for precision)
+            let io_start = Instant::now();
+            let result = file.read_exact(&mut buffer);
+            let io_elapsed = io_start.elapsed().as_nanos() as u64;
+            self.io_time_ns.fetch_add(io_elapsed, Ordering::Relaxed);
+
+            match result {
                 Ok(_) => {
                     // Verify pattern
                     let has_errors = buffer.iter().any(|&b| b != 0xA5);
@@ -183,16 +195,21 @@ impl DiskTortureTest {
     /// Get current metrics
     pub fn get_metrics(&self) -> TestMetrics {
         let errors = self.errors.load(Ordering::Relaxed);
-        let elapsed = self.start_time.elapsed().as_secs_f64();
+        // Use actual I/O time instead of elapsed time (nanoseconds for precision)
+        let io_time_secs = self.io_time_ns.load(Ordering::Relaxed) as f64 / 1_000_000_000.0;
 
-        let write_speed = if elapsed > 0.0 {
-            (self.bytes_written.load(Ordering::Relaxed) as f64 / 1024.0 / 1024.0) / elapsed
+        let bytes_written_mb = self.bytes_written.load(Ordering::Relaxed) as f64 / 1024.0 / 1024.0;
+        let bytes_read_mb = self.bytes_read.load(Ordering::Relaxed) as f64 / 1024.0 / 1024.0;
+
+        // Calculate speed using actual I/O time
+        let write_speed = if io_time_secs > 0.0 {
+            bytes_written_mb / io_time_secs
         } else {
             0.0
         };
 
-        let read_speed = if elapsed > 0.0 {
-            (self.bytes_read.load(Ordering::Relaxed) as f64 / 1024.0 / 1024.0) / elapsed
+        let read_speed = if io_time_secs > 0.0 {
+            bytes_read_mb / io_time_secs
         } else {
             0.0
         };
@@ -242,16 +259,17 @@ impl DiskTortureTest {
 
     /// Get final result
     pub fn get_result(&self) -> DiskPartialResult {
-        let elapsed = self.start_time.elapsed().as_secs_f64();
+        // Use actual I/O time instead of elapsed time (nanoseconds for precision)
+        let io_time_secs = self.io_time_ns.load(Ordering::Relaxed) as f64 / 1_000_000_000.0;
 
-        let write_speed = if elapsed > 0.0 {
-            (self.bytes_written.load(Ordering::Relaxed) as f64 / 1024.0 / 1024.0) / elapsed
+        let write_speed = if io_time_secs > 0.0 {
+            (self.bytes_written.load(Ordering::Relaxed) as f64 / 1024.0 / 1024.0) / io_time_secs
         } else {
             0.0
         };
 
-        let read_speed = if elapsed > 0.0 {
-            (self.bytes_read.load(Ordering::Relaxed) as f64 / 1024.0 / 1024.0) / elapsed
+        let read_speed = if io_time_secs > 0.0 {
+            (self.bytes_read.load(Ordering::Relaxed) as f64 / 1024.0 / 1024.0) / io_time_secs
         } else {
             0.0
         };
