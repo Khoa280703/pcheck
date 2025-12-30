@@ -251,22 +251,18 @@ fn print_cpu_progress_box(
     let cores = freq.cores;
     let per_core_rows = build_per_core_display(freq, cpu_usage, cores, verbose);
 
-    // Calculate lines to move back (depends on verbose mode)
-    let line_count = if verbose {
-        per_core_rows.len() + 1 // main line + core rows
-    } else {
-        1 // normal mode: only 1 line
-    };
-
-    // Move cursor up to overwrite previous output (not on first iteration)
-    if !is_first {
-        for _ in 0..line_count {
-            print!("\x1b[1A"); // Move up one line
-        }
-    }
-
     if verbose {
         // === VERBOSE MODE ===
+        // Calculate lines to move back (main line + core rows)
+        let line_count = per_core_rows.len() + 1;
+
+        // Move cursor up to overwrite previous output (not on first iteration)
+        if !is_first {
+            for _ in 0..line_count {
+                print!("\x1b[1A"); // Move up one line
+            }
+        }
+
         // Main progress line
         let temp_display = format!("{}{}{} ({}{})", temp_color_code, temp_str, RESET, temp_color_code, temp_status_text);
         println!("⏳ CPU: [{}] {}% | {} ops | {} | {:.2} GHz",
@@ -293,9 +289,9 @@ fn print_cpu_progress_box(
         }
     } else {
         // === NORMAL MODE ===
-        // Only show main progress line, no per-core details
+        // Use \r to return to start of line, then print (no cursor-up needed)
         let temp_display = format!("{}{}{} ({}{})", temp_color_code, temp_str, RESET, temp_color_code, temp_status_text);
-        println!("⏳ CPU: [{}] {}% | {} ops | {} | {:.2} GHz",
+        print!("\r⏳ CPU: [{}] {}% | {} ops | {} | {:.2} GHz",
               bar, percent, ops_str, temp_display, freq.current_ghz);
     }
 

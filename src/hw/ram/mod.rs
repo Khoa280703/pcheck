@@ -2,6 +2,7 @@
 
 use sysinfo::System;
 
+#[derive(Clone)]
 pub struct RamInfo {
     pub total_gb: f64,
     pub used_gb: f64,

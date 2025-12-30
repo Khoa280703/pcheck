@@ -14,6 +14,7 @@ use std::time::Instant;
 use std::io::{self, Write};
 use clap::Parser;
 use hw::{CpuInfo, RamInfo, DiskInfo, GpuInfo};
+use hw::deep::{get_platform_probe, PlatformProbe};
 use lang::{Text, Language};
 use fmt::{print_header_with_text, print_section, print_footer_with_text};
 use stress::{CpuTestConfig, RamTestConfig, DiskTestConfig, HealthStatus};
@@ -87,7 +88,6 @@ fn main() {
     // Full auto mode - prompt for level
     if is_auto_mode {
         run_auto_mode(&text);
-        return;
     }
 }
 
@@ -111,6 +111,35 @@ fn run_component_tests(args: &Args, text: &Text) {
     // Create AI technician for component tests
     let ai = AiTechnician::new(text.lang);
 
+    // Print header
+    println!();
+    println!("============================================================");
+    println!("🧪 PCHECKER {} - v0.3.0", text.health_check());
+    println!("============================================================");
+    println!();
+
+    let platform_probe = get_platform_probe();
+
+    // CPU: Show deep info before test
+    if args.cpu.is_some() {
+        show_cpu_deep_info(text, &platform_probe);
+    }
+
+    // RAM: Show deep info before test
+    if args.ram {
+        show_ram_deep_info(text, &platform_probe);
+    }
+
+    // Disk: Show deep info before test
+    if args.disk {
+        show_disk_deep_info(text, &platform_probe);
+    }
+
+    // GPU: Show deep info before test
+    if args.gpu.is_some() {
+        show_gpu_deep_info(text, &platform_probe);
+    }
+
     run_health_check_mode(
         cpu_duration,
         text,
@@ -121,6 +150,104 @@ fn run_component_tests(args: &Args, text: &Text) {
         args.gpu.is_some(),
         gpu_duration,
     );
+}
+
+/// Show CPU deep info before test
+fn show_cpu_deep_info(text: &Text, probe: &PlatformProbe) {
+    let cpu = CpuInfo::new();
+    println!("🧠 {} - {}", text.cpu(), cpu.model);
+    println!("   {} {}", cpu.cores, text.cores_label());
+
+    if let Some(cache) = probe.get_cache_info() {
+        if cache.l1_kb.is_some() || cache.l2_kb.is_some() || cache.l3_kb.is_some() {
+            println!("   Cache:");
+            if let Some(l1) = cache.l1_kb { println!("     L1: {} KB", l1); }
+            if let Some(l2) = cache.l2_kb { println!("     L2: {} KB", l2); }
+            if let Some(l3) = cache.l3_kb { println!("     L3: {} KB", l3); }
+        }
+    }
+    if let Some(isa) = probe.get_instruction_sets() {
+        println!("   Features: {}", isa.features.join(", "));
+    }
+    if let Some(tdp) = probe.get_tdp(&cpu.model) {
+        println!("   TDP: {} W", tdp);
+    }
+    println!();
+}
+
+/// Show RAM deep info before test
+fn show_ram_deep_info(text: &Text, probe: &PlatformProbe) {
+    let ram = RamInfo::new();
+    println!("💾 {} - {:.1} GB", text.ram(), ram.total_gb);
+
+    let dimm_slots = probe.get_dimm_slots();
+    if !dimm_slots.is_empty() {
+        println!("   DIMM Slots:");
+        for slot in &dimm_slots {
+            println!("     - Slot {}: {} GB {} ({})", slot.id, slot.size_gb, slot.type_, slot.bank);
+            if let Some(speed) = slot.speed_mhz {
+                println!("       Speed: {} MHz", speed);
+            }
+            if let Some(ref mfr) = slot.manufacturer {
+                println!("       Manufacturer: {}", mfr);
+            }
+            if let Some(ref pn) = slot.part_number {
+                println!("       Part Number: {}", pn);
+            }
+        }
+    }
+    println!();
+}
+
+/// Show disk deep info before test
+fn show_disk_deep_info(text: &Text, probe: &PlatformProbe) {
+    let disks = DiskInfo::new();
+    if disks.len() > 1 {
+        for (idx, disk) in disks.iter().enumerate() {
+            println!("💿 {} #{} - {}", text.disk(), idx, disk.name);
+            println!("   Size: {:.1} GB", disk.total_gb);
+        }
+    } else if let Some(disk) = disks.first() {
+        println!("💿 {} - {}", text.disk(), disk.name);
+        println!("   Size: {:.1} GB", disk.total_gb);
+    }
+
+    if let Some(health) = probe.get_disk_health() {
+        println!("   Health:");
+        println!("     Status: {}", health.status);
+        if let Some(ref fw) = health.firmware {
+            println!("     Firmware: {}", fw);
+        }
+        if let Some(tbw) = health.tbw {
+            println!("     TBW: {:.1} TB", tbw);
+        }
+        if let Some(hours) = health.hours {
+            println!("     Power-On Hours: {}", hours);
+        }
+        if let Some(pct) = health.percentage_used {
+            println!("     Life Used: {}%", pct);
+        }
+    }
+    println!();
+}
+
+/// Show GPU deep info before test
+fn show_gpu_deep_info(text: &Text, probe: &PlatformProbe) {
+    let gpus = GpuInfo::new();
+    if gpus.len() > 1 {
+        for (idx, gpu) in gpus.iter().enumerate() {
+            println!("🎮 {} #{} - {}", text.gpu(), idx, gpu.model);
+        }
+    } else if let Some(gpu) = gpus.first() {
+        println!("🎮 {} - {}", text.gpu(), gpu.model);
+    }
+
+    if let Some(driver) = probe.get_gpu_driver() {
+        if let Some(metal) = driver.metal {
+            println!("   Metal: {}", metal);
+        }
+    }
+    println!();
 }
 
 /// Run full auto mode (prompt for level)
@@ -174,10 +301,10 @@ fn run_full_auto_test(duration: u64, text: &Text) {
     let ai = AiTechnician::new(text.lang);
 
     // AI greeting
-    ai.greet(&text);
+    ai.greet(text);
 
     // First show info
-    run_info_mode_all(&text, &ai);
+    run_info_mode_all(text, &ai);
 
     // Then run individual tests
     run_health_check_mode(
@@ -208,7 +335,7 @@ fn run_full_auto_test(duration: u64, text: &Text) {
     let _result = stress::torture::run_torture_test(torture_config);
 }
 
-/// Run info mode - show ALL hardware info
+/// Run info mode - show ALL hardware info (including deep info)
 fn run_info_mode_all(text: &Text, ai: &AiTechnician) {
     let start_time = Instant::now();
 
@@ -222,12 +349,32 @@ fn run_info_mode_all(text: &Text, ai: &AiTechnician) {
     // AI intro
     ai.intro_detect(text);
 
-    // Detect CPU
+    // Get platform probe for deep info
+    let platform_probe = get_platform_probe();
+
+    // Detect CPU + Deep Info
     let cpu = CpuInfo::new();
     let cpu_display = format!("{} ({} {})", cpu.model, cpu.cores, text.cores_label());
     print_section("🧠", text.cpu(), &cpu_display);
 
-    // Detect GPU
+    // CPU Deep Info
+    if let Some(cache) = platform_probe.get_cache_info() {
+        if cache.l1_kb.is_some() || cache.l2_kb.is_some() || cache.l3_kb.is_some() {
+            println!("   Cache:");
+            if let Some(l1) = cache.l1_kb { println!("     L1: {} KB", l1); }
+            if let Some(l2) = cache.l2_kb { println!("     L2: {} KB", l2); }
+            if let Some(l3) = cache.l3_kb { println!("     L3: {} KB", l3); }
+        }
+    }
+    if let Some(isa) = platform_probe.get_instruction_sets() {
+        println!("   Features: {}", isa.features.join(", "));
+    }
+    if let Some(tdp) = platform_probe.get_tdp(&cpu.model) {
+        println!("   TDP: {} W", tdp);
+    }
+    println!();
+
+    // Detect GPU + Deep Info
     let gpus = GpuInfo::new();
     if gpus.len() > 1 {
         for (idx, gpu) in gpus.iter().enumerate() {
@@ -239,12 +386,39 @@ fn run_info_mode_all(text: &Text, ai: &AiTechnician) {
         print_section("🎮", text.gpu(), text.no_gpu());
     }
 
-    // Detect RAM
+    // GPU Deep Info (Metal version)
+    if let Some(driver) = platform_probe.get_gpu_driver() {
+        if let Some(metal) = driver.metal {
+            println!("   Metal: {}", metal);
+        }
+    }
+    println!();
+
+    // Detect RAM + Deep Info
     let ram = RamInfo::new();
     let ram_display = format!("{:.1} GB ({:.1} GB {})", ram.total_gb, ram.used_gb, text.ram_free());
     print_section("💾", text.ram(), &ram_display);
 
-    // Detect ALL disks
+    // RAM Deep Info (DIMM slots)
+    let dimm_slots = platform_probe.get_dimm_slots();
+    if !dimm_slots.is_empty() {
+        println!("   DIMM Slots:");
+        for slot in &dimm_slots {
+            println!("     - Slot {}: {} GB {} ({})", slot.id, slot.size_gb, slot.type_, slot.bank);
+            if let Some(speed) = slot.speed_mhz {
+                println!("       Speed: {} MHz", speed);
+            }
+            if let Some(ref mfr) = slot.manufacturer {
+                println!("       Manufacturer: {}", mfr);
+            }
+            if let Some(ref pn) = slot.part_number {
+                println!("       Part Number: {}", pn);
+            }
+        }
+    }
+    println!();
+
+    // Detect ALL disks + Deep Info
     let disks = DiskInfo::new();
     if disks.len() > 1 {
         for (idx, disk) in disks.iter().enumerate() {
@@ -253,6 +427,25 @@ fn run_info_mode_all(text: &Text, ai: &AiTechnician) {
     } else if let Some(disk) = disks.first() {
         print_section("💿", text.disk(), &disk.display());
     }
+
+    // Disk Deep Info (Health)
+    if let Some(health) = platform_probe.get_disk_health() {
+        println!("   Health:");
+        println!("     Status: {}", health.status);
+        if let Some(ref fw) = health.firmware {
+            println!("     Firmware: {}", fw);
+        }
+        if let Some(tbw) = health.tbw {
+            println!("     TBW: {:.1} TB", tbw);
+        }
+        if let Some(hours) = health.hours {
+            println!("     Power-On Hours: {}", hours);
+        }
+        if let Some(pct) = health.percentage_used {
+            println!("     Life Used: {}%", pct);
+        }
+    }
+    println!();
 
     // AI reaction to specs
     let is_good_config = cpu.cores >= 8 || ram.total_gb >= 16.0;

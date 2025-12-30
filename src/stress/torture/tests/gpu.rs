@@ -100,7 +100,7 @@ impl GpuTortureTest {
             self.frame_count.fetch_add(1, Ordering::Relaxed);
 
             // Small yield to prevent 100% CPU pinning
-            if self.frame_count.load(Ordering::Relaxed) % 100 == 0 {
+            if self.frame_count.load(Ordering::Relaxed).is_multiple_of(100) {
                 std::thread::sleep(Duration::from_micros(100));
             }
         }

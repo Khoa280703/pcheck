@@ -58,6 +58,7 @@ impl GpuType {
     }
 }
 
+#[derive(Clone)]
 pub struct GpuInfo {
     pub model: String,
     pub vram_gb: Option<f64>,

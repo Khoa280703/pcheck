@@ -61,7 +61,7 @@ impl Text {
 
     pub fn disk(&self) -> &str {
         match self.lang {
-            Language::Vietnamese => "Ứ CỨNG",
+            Language::Vietnamese => "Ổ CỨNG",
             Language::English => "DISK",
         }
     }
@@ -131,8 +131,8 @@ impl Text {
 
     pub fn hardware_good(&self) -> &str {
         match self.lang {
-            Language::Vietnamese => "Phần cứng có vẻ ở trạng thái tốt",
-            Language::English => "Hardware appears to be in good condition",
+            Language::Vietnamese => "Phần cứng ở trạng thái tốt",
+            Language::English => "Hardware is in good condition",
         }
     }
 
@@ -562,7 +562,7 @@ impl Text {
     // Torture test translations
     pub fn torture_test(&self) -> &str {
         match self.lang {
-            Language::Vietnamese => "KIỂM TRA ĐỐT LÒ (TORTURE TEST)",
+            Language::Vietnamese => "KIỂM TRA TỔNG THỂ",
             Language::English => "TORTURE TEST (System Stress)",
         }
     }
@@ -851,6 +851,7 @@ impl Text {
     }
 
     // ========== Temperature Status ==========
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn temp_status_excellent(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Rất tốt",
@@ -858,6 +859,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn temp_status_stable(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Ổn định",
@@ -865,6 +867,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn temp_status_warm(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Ấm",
@@ -872,6 +875,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn temp_status_hot(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Nóng",
@@ -880,6 +884,7 @@ impl Text {
     }
 
     // ========== Number Suffixes ==========
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn billion_suffix(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Tỷ",
@@ -887,6 +892,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn million_suffix(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Triệu",
@@ -895,6 +901,7 @@ impl Text {
     }
 
     // ========== Language Selection ==========
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn language_select_prompt(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Chọn ngôn ngữ / Select language:",
@@ -902,6 +909,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn language_option_vi(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Tiếng Việt",
@@ -909,6 +917,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn language_option_en(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "English",
@@ -916,6 +925,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn language_choice_prompt(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Lựa chọn của bạn [1-2]: ",
@@ -923,6 +933,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn language_invalid_choice(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "⚠️  Lựa chọn không hợp lệ. Vui lòng chọn 1 hoặc 2.",
@@ -931,6 +942,7 @@ impl Text {
     }
 
     // ========== Progress Messages ==========
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn progress_allocating(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Đang cấp phát...",
@@ -938,6 +950,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn progress_writing(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Đang ghi...",
@@ -945,6 +958,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn progress_reading(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Đang đọc...",
@@ -952,6 +966,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn progress_verifying(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Đang xác minh...",
@@ -959,6 +974,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn progress_complete(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Hoàn thành",
@@ -967,6 +983,7 @@ impl Text {
     }
 
     // ========== Status Messages ==========
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn status_ok(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "OK",
@@ -974,6 +991,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future i18n features
     pub fn status_ok_no_temp(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "OK (không có dữ liệu nhiệt độ)",
@@ -982,6 +1000,7 @@ impl Text {
     }
 
     // ========== GPU Specific ==========
+    #[allow(dead_code)] // Reserved for future GPU features
     pub fn gpu_compute_unavailable(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "GPU compute không khả dụng",
@@ -989,6 +1008,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future GPU features
     pub fn gpu_fallback_thermal(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Dự phòng: theo dõi nhiệt độ...",
@@ -996,6 +1016,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future GPU features
     pub fn gpu_soc_needs_sudo(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "SoC (cần sudo)",
@@ -1003,6 +1024,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future GPU features
     pub fn gpu_no_sensor(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "N/A (không có cảm biến)",
@@ -1011,6 +1033,7 @@ impl Text {
     }
 
     // ========== Health Evaluation - CPU ==========
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn cpu_crashed(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "CPU bị treo trong bài test - PHẦN CỨNG LỖI",
@@ -1018,6 +1041,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn cpu_overheating(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "CPU quá nhiệt ({:.1}°C) - thất bại hệ thống tản nhiệt",
@@ -1025,6 +1049,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn cpu_running_hot(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "CPU đang chạy nóng ({:.1}°C) - kiểm tra tản nhiệt",
@@ -1032,6 +1057,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn cpu_throttled(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "CPU bị giới hạn {:.1}% - có thể do nhiệt hoặc công suất",
@@ -1039,14 +1065,20 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn cpu_extreme_instability(&self) -> &str {
         match self.lang {
-            Language::Vietnamese => "Phát hiện độ không ổn định cực cao (variance: {:.1}%) - có thể lỗi CPU",
-            Language::English => "Extreme instability detected (variance: {:.1}%) - possible CPU fault",
+            Language::Vietnamese => {
+                "Phát hiện độ không ổn định cực cao (variance: {:.1}%) - có thể lỗi CPU"
+            }
+            Language::English => {
+                "Extreme instability detected (variance: {:.1}%) - possible CPU fault"
+            }
         }
     }
 
     // ========== Health Evaluation - RAM ==========
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn ram_errors_detected(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Phát hiện lỗi bộ nhớ ({} lỗi) - RAM HỎNG",
@@ -1054,6 +1086,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn ram_allocation_failed(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Không thể cấp phát bộ nhớ",
@@ -1061,13 +1094,17 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn ram_low_write_speed(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Tốc độ ghi quá chậm ({:.1} GB/s) - RAM hỏng hoặc sai khe",
-            Language::English => "Extremely low write speed ({:.1} GB/s) - faulty RAM or wrong slot",
+            Language::English => {
+                "Extremely low write speed ({:.1} GB/s) - faulty RAM or wrong slot"
+            }
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn ram_low_read_speed(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Tốc độ đọc quá chậm ({:.1} GB/s) - RAM hỏng hoặc sai khe",
@@ -1076,6 +1113,7 @@ impl Text {
     }
 
     // ========== Health Evaluation - Disk ==========
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn disk_write_permission_error(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Không thể ghi đĩa - kiểm tra quyền hoặc dung lượng đĩa",
@@ -1083,6 +1121,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn disk_read_failure(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Bài test đọc thất bại - có thể lỗi đĩa",
@@ -1090,6 +1129,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn disk_bad_sectors(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Phát hiện bad sector ({} sectors) - đĩa sắp hỏng",
@@ -1097,6 +1137,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn disk_slow_read(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Tốc độ đọc quá chậm ({:.1} MB/s) - đĩa sắp hỏng",
@@ -1104,6 +1145,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn disk_slow_write(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Tốc độ ghi quá chậm ({:.1} MB/s) - đĩa sắp hỏng",
@@ -1111,6 +1153,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn disk_slow_seek(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Thời gian seek chậm ({:.1}ms) - có thể vấn đề cơ học",
@@ -1118,6 +1161,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn disk_ssd_slow(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Tốc độ SSD đọc dưới trung bình ({:.1} MB/s)",
@@ -1125,6 +1169,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future health evaluation features
     pub fn disk_hdd_slow(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Tốc độ HDD đọc dưới trung bình ({:.1} MB/s)",
@@ -1133,6 +1178,7 @@ impl Text {
     }
 
     // ========== AI Commentary ==========
+    #[allow(dead_code)] // Reserved for future AI commentary features
     pub fn ai_cpu_temp_hot(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Nhiệt độ CPU {:.0}°C - đang chạy khá nóng",
@@ -1140,6 +1186,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future AI commentary features
     pub fn ai_cpu_temp_warming(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Nhiệt độ CPU {:.0}°C - đang ấm dần lên",
@@ -1147,6 +1194,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future AI commentary features
     pub fn ai_ram_speed_excellent(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Tốc độ ghi RAM: {:.1} GB/s - xuất sắc",
@@ -1154,6 +1202,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future AI commentary features
     pub fn ai_ram_speed_good(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Tốc độ ghi RAM: {:.1} GB/s - tốt",
@@ -1161,6 +1210,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future AI commentary features
     pub fn ai_ssd_speed_excellent(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "{DISK} SSD đọc: {SPEED:.1} MB/s - xuất sắc",
@@ -1168,6 +1218,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future AI commentary features
     pub fn ai_ssd_speed_good(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "{DISK} SSD đọc: {SPEED:.1} MB/s - tốt",
@@ -1175,6 +1226,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future AI commentary features
     pub fn ai_ssd_speed_below_avg(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "{DISK} SSD đọc: {SPEED:.1} MB/s - dưới trung bình",
@@ -1182,6 +1234,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future AI commentary features
     pub fn ai_hdd_speed_excellent(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "{DISK} HDD đọc: {SPEED:.1} MB/s - xuất sắc",
@@ -1189,6 +1242,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future AI commentary features
     pub fn ai_hdd_speed_good(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "{DISK} HDD đọc: {SPEED:.1} MB/s - tốt",
@@ -1197,6 +1251,7 @@ impl Text {
     }
 
     // ========== SMART & Thermal Status ==========
+    #[allow(dead_code)] // Reserved for future SMART features
     pub fn smart_verified(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Đã xác minh",
@@ -1204,6 +1259,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future SMART features
     pub fn smart_failing(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Đang thất bại",
@@ -1211,6 +1267,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future SMART features
     pub fn smart_unknown(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Không rõ",
@@ -1218,6 +1275,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future thermal features
     pub fn thermal_nominal(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Bình thường",
@@ -1225,6 +1283,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future thermal features
     pub fn thermal_moderate(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Vừa phải",
@@ -1232,6 +1291,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future thermal features
     pub fn thermal_heavy(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Nặng",
@@ -1239,6 +1299,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future thermal features
     pub fn thermal_trapping(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Đang bẫy nhiệt",
@@ -1246,6 +1307,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future thermal features
     pub fn thermal_sleeping(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Đang ngủ",
@@ -1254,6 +1316,7 @@ impl Text {
     }
 
     // ========== Issue Prefixes ==========
+    #[allow(dead_code)] // Reserved for future issue reporting features
     pub fn issue_cpu(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "CPU: {}",
@@ -1261,6 +1324,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future issue reporting features
     pub fn issue_ram(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "RAM: {}",
@@ -1268,6 +1332,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future issue reporting features
     pub fn issue_disk(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Đĩa: {}",
@@ -1275,6 +1340,7 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future issue reporting features
     pub fn issue_disk_indexed(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "Đĩa #{} ({}): {}",
@@ -1282,10 +1348,20 @@ impl Text {
         }
     }
 
+    #[allow(dead_code)] // Reserved for future issue reporting features
     pub fn issue_gpu(&self) -> &str {
         match self.lang {
             Language::Vietnamese => "GPU: {}",
             Language::English => "GPU: {}",
+        }
+    }
+
+    // ========== Deep Info ==========
+    #[allow(dead_code)] // Reserved for future deep info features
+    pub fn deep_info(&self) -> &str {
+        match self.lang {
+            Language::Vietnamese => "THÔNG TIN CHI TIẾT PHẦN CỨNG",
+            Language::English => "DEEP HARDWARE INFO",
         }
     }
 }

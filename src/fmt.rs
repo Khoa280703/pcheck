@@ -27,6 +27,7 @@ pub fn temp_color(temp: f32) -> &'static str {
 }
 
 /// Get temperature status text (requires Text for i18n)
+#[allow(dead_code)]  // Reserved for future i18n features
 pub fn temp_status_i18n(temp: f32, text: &crate::lang::Text) -> String {
     let status = if temp < 60.0 {
         text.temp_status_excellent()
@@ -71,6 +72,7 @@ pub fn usage_color(usage: f32) -> &'static str {
 }
 
 /// Format large number with suffix (Billion, Trillion) - i18n version
+#[allow(dead_code)]  // Reserved for future i18n features
 pub fn format_large_number_i18n(n: u64, text: &crate::lang::Text) -> String {
     if n >= 1_000_000_000 {
         format!("{:.1} {}", n as f64 / 1_000_000_000.0, text.billion_suffix())
